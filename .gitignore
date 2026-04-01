@@ -1,0 +1,10 @@
+node_modules
+.pnpm-store
+.output
+.vinxi
+.tanstack
+dist
+data/*.sqlite
+data/*.sqlite-*
+src/routeTree.gen.ts
+.env

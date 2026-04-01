@@ -1,0 +1,910 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f0e4;
+  --bg-accent: #f1dfc7;
+  --panel: rgba(255, 252, 246, 0.84);
+  --panel-strong: rgba(255, 249, 240, 0.96);
+  --line: rgba(41, 42, 34, 0.12);
+  --ink: #1f2520;
+  --muted: #5e665e;
+  --green: #0c7d69;
+  --orange: #cf6c2b;
+  --blue: #1d4f8f;
+  --shadow: 0 24px 80px rgba(37, 35, 24, 0.12);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(12, 125, 105, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(207, 108, 43, 0.14), transparent 24%),
+    linear-gradient(180deg, #fbf6ee 0%, var(--bg) 100%);
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(30, 37, 28, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 37, 28, 0.03) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at center, black 42%, transparent 92%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.shell-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.shell-brand {
+  display: block;
+}
+
+.shell-title,
+.hero h2,
+.section-banner h2,
+.detail-hero h2,
+.section-intro h3,
+.event-card h3,
+.ticket-card h4,
+.support-row h4,
+.curriculum-module h4,
+.enrollment-row h4 {
+  font-family:
+    'Iowan Old Style',
+    'Palatino Linotype',
+    'Book Antiqua',
+    Palatino,
+    serif;
+}
+
+.shell-title {
+  margin: 6px 0 0;
+  font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 0.95;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--green);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.shell-nav {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.shell-nav-link,
+.ghost-link,
+.ghost-button,
+.primary-link,
+.primary-button {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.shell-nav-link {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.shell-nav-link-active,
+.shell-nav-link:hover {
+  background: var(--ink);
+  color: white;
+}
+
+.shell-main,
+.page-stack,
+.sidebar-stack,
+.curriculum-stack,
+.ticket-stack,
+.ticket-board,
+.event-grid,
+.support-list,
+.enrollment-list {
+  display: grid;
+  gap: 20px;
+}
+
+.page-stack {
+  animation: rise 320ms ease;
+}
+
+.panel,
+.metric-card,
+.event-card {
+  background: var(--panel);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: var(--shadow);
+  border-radius: 28px;
+}
+
+.panel {
+  padding: 28px;
+}
+
+.hero,
+.section-banner,
+.detail-hero {
+  display: grid;
+  gap: 24px;
+}
+
+.hero {
+  grid-template-columns: 2fr 1fr;
+  align-items: end;
+}
+
+.hero h2,
+.section-banner h2,
+.detail-hero h2 {
+  margin: 8px 0 0;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 0.95;
+}
+
+.hero-copy,
+.muted-copy {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.detail-note {
+  margin: 18px 0 0;
+  max-width: 44rem;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.hero-actions,
+.event-card-meta,
+.ticket-lane-head,
+.ticket-card-head,
+.curriculum-head,
+.detail-stats,
+.form-split,
+.ticket-meta,
+.support-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.primary-link,
+.ghost-link,
+.ghost-button,
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font-weight: 700;
+}
+
+.primary-link,
+.primary-button {
+  background: linear-gradient(135deg, var(--green), #14604d);
+  color: white;
+  border: none;
+}
+
+.ghost-link {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.ghost-button {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  cursor: pointer;
+}
+
+.primary-link:hover,
+.ghost-link:hover,
+.ghost-button:hover,
+.primary-button:hover {
+  transform: translateY(-1px);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.metric-card {
+  padding: 24px;
+}
+
+.metric-card p,
+.metric-card span,
+.stats-grid dt,
+.ticket-meta dt,
+.support-meta dt,
+.detail-stats dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.metric-card strong {
+  display: block;
+  margin: 10px 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+}
+
+.section-grid,
+.two-column-layout {
+  display: grid;
+  gap: 20px;
+}
+
+.event-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.event-card {
+  padding: 22px;
+  border-top: 5px solid var(--course-accent);
+}
+
+.media-placeholder {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 24px;
+  border: 1px solid rgba(31, 37, 32, 0.08);
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--placeholder-accent) 24%, white), rgba(255, 255, 255, 0.88)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.46));
+}
+
+.media-placeholder-card,
+.media-placeholder-hero,
+.media-placeholder-row {
+  min-height: 160px;
+}
+
+.media-placeholder-card {
+  margin-bottom: 18px;
+  aspect-ratio: 16 / 10;
+}
+
+.media-placeholder-hero {
+  min-height: 240px;
+}
+
+.media-placeholder-row {
+  width: 148px;
+  min-width: 148px;
+  min-height: 108px;
+}
+
+.media-placeholder-avatar {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.84), transparent 46%),
+    linear-gradient(135deg, color-mix(in srgb, var(--placeholder-accent) 72%, white), color-mix(in srgb, var(--placeholder-accent) 38%, #1f2520));
+  color: white;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.media-placeholder-orb,
+.media-placeholder-grid,
+.media-placeholder-copy {
+  position: absolute;
+}
+
+.media-placeholder-orb {
+  inset: auto -8% -34% auto;
+  width: 68%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, color-mix(in srgb, var(--placeholder-accent) 52%, white) 0%, transparent 68%);
+  opacity: 0.95;
+}
+
+.media-placeholder-grid {
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.32) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.32) 1px, transparent 1px);
+  background-size: 24px 24px;
+  mask-image: linear-gradient(135deg, black, transparent 82%);
+}
+
+.media-placeholder-copy {
+  inset: auto 18px 18px 18px;
+  display: grid;
+  gap: 6px;
+  max-width: min(18rem, 100%);
+}
+
+.media-placeholder-eyebrow,
+.media-placeholder-meta,
+.media-placeholder-initials {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.media-placeholder-eyebrow,
+.media-placeholder-meta {
+  font-size: 0.72rem;
+}
+
+.media-placeholder-eyebrow {
+  color: rgba(31, 37, 32, 0.72);
+}
+
+.media-placeholder-copy strong {
+  font-family:
+    'Iowan Old Style',
+    'Palatino Linotype',
+    'Book Antiqua',
+    Palatino,
+    serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.6rem);
+  line-height: 1;
+}
+
+.media-placeholder-meta {
+  color: rgba(31, 37, 32, 0.78);
+}
+
+.media-placeholder-initials {
+  font-size: 1.35rem;
+}
+
+.event-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.event-card h3,
+.ticket-card h4,
+.support-row h4,
+.curriculum-module h4,
+.enrollment-row h4 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.event-title-link {
+  transition: color 180ms ease;
+}
+
+.event-title-link:hover {
+  color: var(--green);
+}
+
+.event-card-category,
+.curriculum-position,
+.support-ticket,
+.ticket-number {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  color: var(--orange);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.stats-grid dd,
+.ticket-meta dd,
+.support-meta dd,
+.detail-stats dd {
+  margin: 6px 0 0;
+  font-weight: 700;
+}
+
+.event-card-meta {
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(31, 37, 32, 0.08);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.support-list {
+  padding: 0;
+}
+
+.support-list.panel {
+  overflow: hidden;
+}
+
+.support-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 18px;
+  padding: 24px 28px;
+  border-top: 1px solid var(--line);
+}
+
+.support-row-main {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.support-row:first-child {
+  border-top: none;
+}
+
+.support-row.compact {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.support-row.compact:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.support-meta {
+  justify-content: space-between;
+}
+
+.detail-hero {
+  border-top: 6px solid var(--course-accent);
+}
+
+.detail-hero-layout {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+  align-items: center;
+}
+
+.detail-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.detail-content-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.detail-chip-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.detail-chip {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(31, 37, 32, 0.08);
+}
+
+.detail-chip-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.detail-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.detail-list li {
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink);
+}
+
+.host-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.host-panel-head {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.two-column-layout {
+  grid-template-columns: 1.6fr 1fr;
+  align-items: start;
+}
+
+.curriculum-module {
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+}
+
+.curriculum-module:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.lesson-list {
+  list-style: none;
+  padding: 0;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.lesson-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--muted);
+}
+
+.enrollment-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.enrollment-row:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.enrollment-progress {
+  text-align: right;
+}
+
+.enrollment-progress strong {
+  display: block;
+}
+
+.support-layout {
+  grid-template-columns: 380px 1fr;
+}
+
+.sticky-panel {
+  position: sticky;
+  top: 24px;
+}
+
+.ticket-form {
+  display: grid;
+  gap: 16px;
+}
+
+.ticket-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.ticket-form input,
+.ticket-form select,
+.ticket-form textarea {
+  width: 100%;
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+.ticket-form textarea {
+  resize: vertical;
+}
+
+.form-error {
+  margin: 0;
+  color: #a4322a;
+  font-size: 0.92rem;
+}
+
+.form-success {
+  margin: 0;
+  color: var(--green);
+  font-size: 0.92rem;
+}
+
+.booking-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.booking-price-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+}
+
+.booking-price-row strong {
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1;
+}
+
+.booking-price-row span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.booking-facts {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.booking-facts dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.booking-facts dd {
+  margin: 6px 0 0;
+  font-weight: 700;
+}
+
+.booking-form {
+  display: grid;
+  gap: 16px;
+}
+
+.booking-form label,
+.course-form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.booking-form input,
+.course-form input,
+.course-form select,
+.course-form textarea {
+  width: 100%;
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+.course-form {
+  display: grid;
+  gap: 18px;
+}
+
+.course-form textarea {
+  resize: vertical;
+}
+
+.organizer-auth-layout {
+  display: grid;
+  min-height: 68vh;
+  place-items: center;
+}
+
+.organizer-auth-panel {
+  width: min(560px, 100%);
+}
+
+.organizer-banner {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: 1.6fr auto;
+  align-items: end;
+}
+
+.organizer-course-side {
+  display: grid;
+  gap: 16px;
+  justify-items: end;
+}
+
+.organizer-banner-side {
+  display: grid;
+  gap: 16px;
+  justify-items: end;
+}
+
+.organizer-course-meta {
+  min-width: 220px;
+}
+
+.form-split-3 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.form-split-4 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ticket-board {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.ticket-lane {
+  padding: 22px;
+}
+
+.ticket-lane-head {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(31, 37, 32, 0.08);
+}
+
+.ticket-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 1100px) {
+  .metrics-grid,
+  .event-grid,
+  .detail-stats,
+  .detail-chip-grid,
+  .ticket-board,
+  .support-layout,
+  .two-column-layout,
+  .booking-facts,
+  .form-split-3,
+  .form-split-4,
+  .organizer-banner,
+  .detail-hero-layout,
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .sticky-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 780px) {
+  .shell {
+    padding: 20px 16px 48px;
+  }
+
+  .shell-header,
+  .support-row,
+  .support-meta,
+  .event-card-head,
+  .lesson-list li,
+  .enrollment-row,
+  .booking-price-row {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: start;
+  }
+
+  .organizer-course-side {
+    justify-items: start;
+  }
+
+  .organizer-banner-side {
+    justify-items: start;
+  }
+
+  .support-row-main {
+    grid-template-columns: 1fr;
+  }
+
+  .media-placeholder-row {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-split {
+    flex-direction: column;
+  }
+}
