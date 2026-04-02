@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 import { useState } from 'react'
 
-import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
@@ -23,12 +23,12 @@ const purchaseEventInput = z.object({
   slug: z.string().min(1),
 })
 
-const purchaseEventAccess = createServerFn({ method: 'POST' })
+const createCheckoutSessionFn = createServerFn({ method: 'POST' })
   .inputValidator((input: z.infer<typeof purchaseEventInput>) => purchaseEventInput.parse(input))
   .handler(async ({ data }) => {
-    const { purchaseEventAccess } = await import('@/server/lms')
+    const { createCheckoutSession } = await import('@/server/stripe')
 
-    return purchaseEventAccess(data)
+    return createCheckoutSession(data)
   })
 
 export const Route = createFileRoute('/events/$eventSlug')({
@@ -55,10 +55,8 @@ const initialFormState = {
 
 function EventDetailPage() {
   const { agenda, attendeePreview, event } = Route.useLoaderData()
-  const router = useRouter()
   const [formState, setFormState] = useState(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
@@ -199,11 +197,10 @@ function EventDetailPage() {
               onSubmit={async (eventSubmit) => {
                 eventSubmit.preventDefault()
                 setErrorMessage(null)
-                setSuccessMessage(null)
                 setIsSubmitting(true)
 
                 try {
-                  const result = await purchaseEventAccess({
+                  const result = await createCheckoutSessionFn({
                     data: {
                       attendeeEmail: formState.attendeeEmail,
                       attendeeName: formState.attendeeName,
@@ -211,14 +208,11 @@ function EventDetailPage() {
                     },
                   })
 
-                  setFormState(initialFormState)
-                  setSuccessMessage(`Order confirmed. Reference ${result.confirmationCode}.`)
-                  await router.invalidate()
+                  window.location.href = result.url
                 } catch (error) {
                   setErrorMessage(
                     error instanceof Error ? error.message : 'Unable to complete the purchase.',
                   )
-                } finally {
                   setIsSubmitting(false)
                 }
               }}
@@ -251,12 +245,11 @@ function EventDetailPage() {
                 />
               </label>
               {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-              {successMessage ? <p className="form-success">{successMessage}</p> : null}
               <button className="primary-button" disabled={isSubmitting || event.seatsRemaining === 0} type="submit">
                 {event.seatsRemaining === 0
                   ? 'Sold out'
                   : isSubmitting
-                    ? 'Processing purchase...'
+                    ? 'Preparing checkout...'
                     : 'Purchase seat'}
               </button>
             </form>

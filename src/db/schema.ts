@@ -91,6 +91,26 @@ export const enrollments = sqliteTable('enrollments', {
   enrolledAt: text('enrolled_at').notNull(),
 })
 
+export const checkoutSessions = sqliteTable(
+  'checkout_sessions',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    stripeSessionId: text('stripe_session_id').notNull(),
+    courseId: integer('course_id')
+      .notNull()
+      .references(() => courses.id, { onDelete: 'cascade' }),
+    attendeeName: text('attendee_name').notNull(),
+    attendeeEmail: text('attendee_email').notNull(),
+    status: text('status').notNull().default('pending'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => ({
+    stripeSessionIdIndex: uniqueIndex('checkout_sessions_stripe_session_id_idx').on(
+      table.stripeSessionId,
+    ),
+  }),
+)
+
 export const tickets = sqliteTable(
   'tickets',
   {
@@ -134,6 +154,7 @@ export const coursesRelations = relations(courses, ({ many, one }) => ({
   modules: many(modules),
   enrollments: many(enrollments),
   tickets: many(tickets),
+  checkoutSessions: many(checkoutSessions),
 }))
 
 export const organizersRelations = relations(organizers, ({ many }) => ({
@@ -182,5 +203,12 @@ export const ticketMessagesRelations = relations(ticketMessages, ({ one }) => ({
   ticket: one(tickets, {
     fields: [ticketMessages.ticketId],
     references: [tickets.id],
+  }),
+}))
+
+export const checkoutSessionsRelations = relations(checkoutSessions, ({ one }) => ({
+  course: one(courses, {
+    fields: [checkoutSessions.courseId],
+    references: [courses.id],
   }),
 }))
