@@ -1,7 +1,8 @@
-import { and, eq } from 'drizzle-orm'
+import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
-import { courses, enrollments, lessons, modules } from '@/db/schema'
+import { courses, enrollments, lessons, modules, orders } from '@/db/schema'
+import { normalizeEmail } from '@/lib/organizer-auth'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -277,16 +278,16 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     throw new Error('This event is sold out.')
   }
 
-  const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
+  const normalizedEmail = normalizeEmail(input.attendeeEmail)
   const alreadyRegistered = existingRegistrations.some(
-    (registration) => registration.learnerEmail.trim().toLowerCase() === normalizedEmail,
+    (registration) => normalizeEmail(registration.learnerEmail) === normalizedEmail,
   )
 
   if (alreadyRegistered) {
     throw new Error('This attendee already has a confirmed registration.')
   }
 
-  const result = database
+  const enrollmentResult = database
     .insert(enrollments)
     .values({
       courseId: course.id,
@@ -298,7 +299,93 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     })
     .run()
 
-  return {
-    confirmationCode: `NS-${course.id}-${String(Number(result.lastInsertRowid)).padStart(4, '0')}`,
+  const enrollmentId = Number(enrollmentResult.lastInsertRowid)
+  const orderNumber = `ORD-${String(enrollmentId).padStart(5, '0')}`
+  const eventDetails = getEventDetails(course)
+
+  database
+    .insert(orders)
+    .values({
+      enrollmentId,
+      courseId: course.id,
+      orderNumber,
+      attendeeName: input.attendeeName.trim(),
+      attendeeEmail: normalizedEmail,
+      priceAtPurchase: eventDetails.price,
+      status: 'confirmed',
+      createdAt: new Date().toISOString(),
+    })
+    .run()
+
+  return { orderNumber }
+}
+
+export function getOrderByCode(orderCode: string) {
+  const database = bootstrapDatabase()
+  const order = database
+    .select()
+    .from(orders)
+    .where(eq(orders.orderNumber, orderCode))
+    .get()
+
+  if (!order) {
+    return null
   }
+
+  const course = order.courseId
+    ? database.select().from(courses).where(eq(courses.id, order.courseId)).get()
+    : null
+
+  const eventDetails = course ? getEventDetails(course) : null
+
+  return {
+    order,
+    event: eventDetails && course
+      ? {
+          title: eventDetails.title,
+          category: eventDetails.category,
+          format: eventDetails.format,
+          city: eventDetails.city,
+          startAt: eventDetails.startAt,
+          endAt: eventDetails.endAt,
+          organizerName: eventDetails.organizerName,
+          accent: eventDetails.accent,
+          slug: course.slug,
+        }
+      : null,
+  }
+}
+
+export function getOrdersByEmail(email: string) {
+  const database = bootstrapDatabase()
+  const normalizedEmail = normalizeEmail(email)
+
+  const orderRows = database
+    .select()
+    .from(orders)
+    .where(eq(orders.attendeeEmail, normalizedEmail))
+    .orderBy(desc(orders.createdAt))
+    .all()
+
+  if (orderRows.length === 0) {
+    return []
+  }
+
+  const courseIds = [...new Set(orderRows.map((o) => o.courseId).filter((id): id is number => id !== null))]
+  const courseRows = courseIds.length > 0
+    ? database.select().from(courses).where(inArray(courses.id, courseIds)).all()
+    : []
+  const courseById = new Map(courseRows.map((c) => [c.id, c]))
+
+  return orderRows.map((order) => {
+    const course = order.courseId ? courseById.get(order.courseId) : null
+    const eventDetails = course ? getEventDetails(course) : null
+
+    return {
+      ...order,
+      eventTitle: eventDetails?.title ?? null,
+      eventSlug: course?.slug ?? null,
+      accent: course?.accent ?? null,
+    }
+  })
 }
