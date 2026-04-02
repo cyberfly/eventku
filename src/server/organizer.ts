@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { and, eq, inArray, lt } from 'drizzle-orm'
+import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
 
 import { bootstrapDatabase } from '@/db'
@@ -407,6 +407,57 @@ export function getOrganizerCourseDetail(courseId: number) {
       lessonCount: lessonRows.length,
       moduleCount: moduleRows.length,
       seatsRemaining: Math.max(course.seatCap - enrollmentRows.length, 0),
+    },
+  }
+}
+
+export function getOrganizerCourseAttendees(courseId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select({
+      accent: courses.accent,
+      category: courses.category,
+      id: courses.id,
+      seatCap: courses.seatCap,
+      slug: courses.slug,
+      title: courses.title,
+    })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    return null
+  }
+
+  const attendeeRows = database
+    .select({
+      enrolledAt: enrollments.enrolledAt,
+      id: enrollments.id,
+      learnerEmail: enrollments.learnerEmail,
+      learnerName: enrollments.learnerName,
+      progress: enrollments.progress,
+      status: enrollments.status,
+    })
+    .from(enrollments)
+    .where(eq(enrollments.courseId, course.id))
+    .orderBy(desc(enrollments.enrolledAt))
+    .all()
+
+  const statusCounts = attendeeRows.reduce<Record<string, number>>((acc, row) => {
+    acc[row.status] = (acc[row.status] ?? 0) + 1
+    return acc
+  }, {})
+
+  return {
+    attendees: attendeeRows,
+    course,
+    stats: {
+      active: statusCounts['Active'] ?? 0,
+      atRisk: statusCounts['At Risk'] ?? 0,
+      completed: statusCounts['Completed'] ?? 0,
+      confirmed: statusCounts['Confirmed'] ?? 0,
     },
   }
 }
