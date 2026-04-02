@@ -40,6 +40,15 @@ function Home() {
             View featured event
           </Link>
         </div>
+        <div className="hero-banner">
+          <MediaPlaceholder
+            accent={data.spotlightEvents[0]?.accent ?? '#4f7942'}
+            eyebrow={data.spotlightEvents[0]?.category ?? 'Featured'}
+            meta={data.spotlightEvents[0] ? `${data.spotlightEvents[0].format} • ${data.spotlightEvents[0].city}` : undefined}
+            title={data.spotlightEvents[0]?.title ?? 'Upcoming Events'}
+            variant="hero"
+          />
+        </div>
       </section>
 
       <section className="metrics-grid">

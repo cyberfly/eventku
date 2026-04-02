@@ -2,6 +2,7 @@ type EventExperience = {
   audience: string
   category: string
   city: string
+  featured?: boolean
   format: string
   heroNote: string
   highlights: string[]
@@ -18,6 +19,7 @@ type EventExperience = {
 
 export const eventExperienceBySlug: Record<string, EventExperience> = {
   'ops-foundations': {
+    featured: true,
     title: 'Online Seminar: Operations Foundations Live',
     summary:
       'A practical live seminar for support and training teams that need sharper service design, calmer escalations, and faster response playbooks.',

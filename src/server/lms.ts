@@ -51,6 +51,7 @@ function getEventDetails(course: CourseRow) {
     category: configured?.category ?? course.category,
     city: configured?.city ?? 'Online',
     endAt: configured?.endAt ?? course.createdAt,
+    featured: configured?.featured ?? false,
     format: configured?.format ?? course.level,
     heroNote: configured?.heroNote ?? 'Live training event',
     highlights: configured?.highlights ?? [],
