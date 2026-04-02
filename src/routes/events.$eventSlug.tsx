@@ -4,9 +4,9 @@ import { useState } from 'react'
 
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
 
 import { MediaPlaceholder } from '@/components/media-placeholder'
+import { purchaseEventInput } from '@/lib/events'
 import { formatCurrency, formatEventDateTime, formatHours } from '@/lib/format'
 
 const getEventDetail = createServerFn({ method: 'GET' })
@@ -16,12 +16,6 @@ const getEventDetail = createServerFn({ method: 'GET' })
 
     return getEventDetail(data.slug)
   })
-
-const purchaseEventInput = z.object({
-  attendeeEmail: z.string().email(),
-  attendeeName: z.string().min(2).max(80),
-  slug: z.string().min(1),
-})
 
 const purchaseEventAccess = createServerFn({ method: 'POST' })
   .inputValidator((input: z.infer<typeof purchaseEventInput>) => purchaseEventInput.parse(input))

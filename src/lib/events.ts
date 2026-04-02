@@ -1,3 +1,11 @@
+import { z } from 'zod'
+
+export const purchaseEventInput = z.object({
+  attendeeEmail: z.string().email(),
+  attendeeName: z.string().min(2).max(80),
+  slug: z.string().min(1),
+})
+
 type EventExperience = {
   audience: string
   category: string
