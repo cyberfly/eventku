@@ -1,7 +1,22 @@
 {
   "permissions": {
     "allow": [
-      "Read(//Users/integrasolid/.claude/agents/**)"
+      "Read(//Users/integrasolid/.claude/agents/**)",
+      "Bash(npx --no-install prettier --version)",
+      "Bash(pnpm add:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/format.sh"
+          }
+        ]
+      }
     ]
   }
 }

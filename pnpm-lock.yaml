@@ -51,6 +51,9 @@ importers:
       drizzle-kit:
         specifier: latest
         version: 0.31.10
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
       tsx:
         specifier: latest
         version: 4.21.0

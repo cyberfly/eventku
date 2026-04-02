@@ -14,8 +14,8 @@
     "@tanstack/react-router": "latest",
     "@tanstack/react-start": "latest",
     "better-sqlite3": "latest",
-    "drizzle-orm": "latest",
     "dotenv": "latest",
+    "drizzle-orm": "latest",
     "react": "latest",
     "react-dom": "latest",
     "zod": "latest"
@@ -27,6 +27,7 @@
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
     "drizzle-kit": "latest",
+    "prettier": "^3.8.1",
     "tsx": "latest",
     "typescript": "latest",
     "vite": "latest"
