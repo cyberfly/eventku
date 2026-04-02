@@ -1,5 +1,7 @@
 import type { CSSProperties } from 'react'
 
+import { getInitials } from '@/lib/format'
+
 type MediaPlaceholderProps = {
   accent: string
   eyebrow?: string
@@ -8,14 +10,6 @@ type MediaPlaceholderProps = {
   variant?: 'avatar' | 'card' | 'hero' | 'row'
 }
 
-function getInitials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('')
-}
 
 export function MediaPlaceholder({
   accent,

@@ -65,6 +65,16 @@ export const getOrganizerCourseDetailFn = createServerFn({ method: 'GET' })
     return getOrganizerCourseDetail(data.courseId)
   })
 
+export const getOrganizerCourseAttendeesFn = createServerFn({ method: 'GET' })
+  .inputValidator((input: z.infer<typeof courseIdInput>) =>
+    courseIdInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { getOrganizerCourseAttendees } = await import('@/server/organizer')
+
+    return getOrganizerCourseAttendees(data.courseId)
+  })
+
 export const updateOrganizerCourseFn = createServerFn({ method: 'POST' })
   .inputValidator((input: z.infer<typeof updateOrganizerCourseInput>) =>
     updateOrganizerCourseInput.parse(input),
