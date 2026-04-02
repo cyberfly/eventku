@@ -1,6 +1,8 @@
-import { and, eq, inArray, lt } from 'drizzle-orm'
-import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
+import { and, eq, inArray } from 'drizzle-orm'
+import { getHeaders } from '@tanstack/react-start/server'
+import { appendResponseHeader } from 'vinxi/http'
 
+import { auth } from '@/lib/auth'
 import { bootstrapDatabase } from '@/db'
 import {
   courses,
@@ -8,23 +10,9 @@ import {
   lessons,
   modules,
   organizers,
-  organizerSessions,
 } from '@/db/schema'
 import type { OrganizerCourseInput, OrganizerLoginInput } from '@/lib/organizer'
-import { createSessionToken, normalizeEmail, verifyPassword } from '@/lib/organizer-auth'
-
-const SESSION_COOKIE_NAME = 'organizer_session'
-const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7
-
-function getSessionCookieOptions(expires: Date = new Date(0)) {
-  return {
-    expires,
-    httpOnly: true,
-    path: '/',
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-  }
-}
+import { normalizeEmail } from '@/lib/organizer-auth'
 
 function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
   const counts = new Map<number, number>()
@@ -42,65 +30,33 @@ function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
   return counts
 }
 
-function cleanupExpiredSessions() {
-  const database = bootstrapDatabase()
-
-  database
-    .delete(organizerSessions)
-    .where(lt(organizerSessions.expiresAt, new Date().toISOString()))
-    .run()
-}
-
-function clearOrganizerSessionCookie() {
-  deleteCookie(SESSION_COOKIE_NAME, getSessionCookieOptions())
-}
-
-function getOrganizerSessionRecord() {
-  cleanupExpiredSessions()
-
-  const token = getCookie(SESSION_COOKIE_NAME)
-
-  if (!token) {
-    return null
-  }
-
-  const database = bootstrapDatabase()
-  const session = database
-    .select({
-      expiresAt: organizerSessions.expiresAt,
-      organizerEmail: organizers.email,
-      organizerId: organizers.id,
-      organizerName: organizers.name,
-      token: organizerSessions.token,
-    })
-    .from(organizerSessions)
-    .innerJoin(organizers, eq(organizerSessions.organizerId, organizers.id))
-    .where(eq(organizerSessions.token, token))
-    .get()
+async function getOrganizerSessionRecord() {
+  const session = await auth.api.getSession({ headers: getHeaders() })
 
   if (!session) {
-    clearOrganizerSessionCookie()
     return null
   }
 
-  if (new Date(session.expiresAt).getTime() <= Date.now()) {
-    database
-      .delete(organizerSessions)
-      .where(eq(organizerSessions.token, session.token))
-      .run()
-    clearOrganizerSessionCookie()
+  const database = bootstrapDatabase()
+  const organizer = database
+    .select()
+    .from(organizers)
+    .where(eq(organizers.email, session.user.email))
+    .get()
+
+  if (!organizer) {
     return null
   }
 
   return {
-    email: session.organizerEmail,
-    id: session.organizerId,
-    name: session.organizerName,
+    email: organizer.email,
+    id: organizer.id,
+    name: organizer.name,
   }
 }
 
-function requireOrganizerSession() {
-  const organizer = getOrganizerSessionRecord()
+async function requireOrganizerSession() {
+  const organizer = await getOrganizerSessionRecord()
 
   if (!organizer) {
     throw new Error('Organizer authentication required.')
@@ -154,34 +110,32 @@ export function getOrganizerSession() {
   return getOrganizerSessionRecord()
 }
 
-export function loginOrganizer(input: OrganizerLoginInput) {
-  cleanupExpiredSessions()
+export async function loginOrganizer(input: OrganizerLoginInput) {
+  const email = normalizeEmail(input.email)
+
+  const response = await auth.api.signInEmail({
+    body: { email, password: input.password },
+    asResponse: true,
+  })
+
+  if (!response.ok) {
+    throw new Error('Invalid organizer email or password.')
+  }
 
   const database = bootstrapDatabase()
   const organizer = database
     .select()
     .from(organizers)
-    .where(eq(organizers.email, normalizeEmail(input.email)))
+    .where(eq(organizers.email, email))
     .get()
 
-  if (!organizer || !verifyPassword(input.password, organizer.passwordHash)) {
+  if (!organizer) {
     throw new Error('Invalid organizer email or password.')
   }
 
-  const token = createSessionToken()
-  const expires = new Date(Date.now() + SESSION_DURATION_MS)
-
-  database
-    .insert(organizerSessions)
-    .values({
-      organizerId: organizer.id,
-      token,
-      expiresAt: expires.toISOString(),
-      createdAt: new Date().toISOString(),
-    })
-    .run()
-
-  setCookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions(expires))
+  for (const cookie of response.headers.getSetCookie()) {
+    appendResponseHeader('set-cookie', cookie)
+  }
 
   return {
     organizer: {
@@ -192,26 +146,23 @@ export function loginOrganizer(input: OrganizerLoginInput) {
   }
 }
 
-export function logoutOrganizer() {
-  const database = bootstrapDatabase()
-  const token = getCookie(SESSION_COOKIE_NAME)
+export async function logoutOrganizer() {
+  const response = await auth.api.signOut({
+    headers: getHeaders(),
+    asResponse: true,
+  })
 
-  if (token) {
-    database
-      .delete(organizerSessions)
-      .where(eq(organizerSessions.token, token))
-      .run()
+  for (const cookie of response.headers.getSetCookie()) {
+    appendResponseHeader('set-cookie', cookie)
   }
-
-  clearOrganizerSessionCookie()
 
   return {
     ok: true,
   }
 }
 
-export function getOrganizerDashboard() {
-  const organizer = requireOrganizerSession()
+export async function getOrganizerDashboard() {
+  const organizer = await requireOrganizerSession()
   const database = bootstrapDatabase()
   const organizerCourses = database
     .select()
@@ -300,8 +251,8 @@ export function getOrganizerDashboard() {
   }
 }
 
-export function createOrganizerCourse(input: OrganizerCourseInput) {
-  const organizer = requireOrganizerSession()
+export async function createOrganizerCourse(input: OrganizerCourseInput) {
+  const organizer = await requireOrganizerSession()
   const database = bootstrapDatabase()
   const slug = resolveUniqueSlug(input.slug)
   const now = new Date().toISOString()
@@ -330,8 +281,8 @@ export function createOrganizerCourse(input: OrganizerCourseInput) {
   }
 }
 
-export function getOrganizerCourseDetail(courseId: number) {
-  const organizer = requireOrganizerSession()
+export async function getOrganizerCourseDetail(courseId: number) {
+  const organizer = await requireOrganizerSession()
   const database = bootstrapDatabase()
   const course = database
     .select()
@@ -387,11 +338,11 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
-export function updateOrganizerCourse(
+export async function updateOrganizerCourse(
   courseId: number,
   input: OrganizerCourseInput,
 ) {
-  const organizer = requireOrganizerSession()
+  const organizer = await requireOrganizerSession()
   const database = bootstrapDatabase()
   const existingCourse = database
     .select({

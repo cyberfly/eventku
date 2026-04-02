@@ -13,9 +13,10 @@
   "dependencies": {
     "@tanstack/react-router": "latest",
     "@tanstack/react-start": "latest",
+    "better-auth": "^1.5.6",
     "better-sqlite3": "latest",
-    "drizzle-orm": "latest",
     "dotenv": "latest",
+    "drizzle-orm": "latest",
     "react": "latest",
     "react-dom": "latest",
     "zod": "latest"

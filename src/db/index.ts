@@ -33,8 +33,9 @@ export function bootstrapDatabase() {
     migrationsFolder: resolve(process.cwd(), 'drizzle'),
   })
 
-  ensureSeedData(db)
   isBootstrapped = true
+
+  void ensureSeedData(db).catch(console.error)
 
   return db
 }
