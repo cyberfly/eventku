@@ -22,6 +22,7 @@
     "zod": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/better-sqlite3": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
