@@ -8,3 +8,4 @@ data/*.sqlite
 data/*.sqlite-*
 src/routeTree.gen.ts
 .env
+.playwright-mcp/
