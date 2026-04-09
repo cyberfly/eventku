@@ -806,8 +806,53 @@ textarea {
   gap: 18px;
 }
 
+.form-section {
+  display: grid;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.form-section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.form-section-header {
+  display: grid;
+  gap: 6px;
+}
+
+.form-section-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
 .course-form textarea {
   resize: vertical;
+}
+
+.form-split-2 {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.checkbox-field {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.checkbox-field input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
 }
 
 .organizer-auth-layout {
@@ -1030,6 +1075,7 @@ textarea {
   .support-layout,
   .two-column-layout,
   .booking-facts,
+  .form-split-2,
   .form-split-3,
   .form-split-4,
   .organizer-banner,

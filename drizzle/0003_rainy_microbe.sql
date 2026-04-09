@@ -1,0 +1,20 @@
+ALTER TABLE `courses` ADD `subtitle` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `language` text DEFAULT 'English' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `delivery_format` text DEFAULT 'Cohort' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `location` text DEFAULT 'Virtual' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `timezone` text DEFAULT 'Asia/Kuala_Lumpur' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `estimated_weekly_hours` integer DEFAULT 4 NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `price_usd` integer DEFAULT 199 NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `total_modules` integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `total_lessons` integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `certificate_included` integer DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `featured` integer DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `prerequisites` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `learning_outcomes` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `target_audience` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `materials_included` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `support_details` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `enrollment_start_date` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `enrollment_end_date` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `course_start_date` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `courses` ADD `course_end_date` text DEFAULT '' NOT NULL;

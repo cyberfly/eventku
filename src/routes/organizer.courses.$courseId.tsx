@@ -10,6 +10,7 @@ import {
 
 import { CourseForm } from '@/components/course-form'
 import { MediaPlaceholder } from '@/components/media-placeholder'
+import { defaultCourseFormState } from '@/lib/organizer'
 import type { OrganizerCourseInput } from '@/lib/organizer'
 import {
   getOrganizerCourseDetailFn,
@@ -48,17 +49,11 @@ function OrganizerCourseDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const initialValues: OrganizerCourseInput = {
-    accent: data.course.accent,
+    ...defaultCourseFormState,
+    ...data.course,
     category: data.course.category as OrganizerCourseInput['category'],
-    completionRate: data.course.completionRate,
-    durationHours: data.course.durationHours,
-    instructorName: data.course.instructorName,
     level: data.course.level as OrganizerCourseInput['level'],
-    seatCap: data.course.seatCap,
-    slug: data.course.slug,
     status: data.course.status as OrganizerCourseInput['status'],
-    summary: data.course.summary,
-    title: data.course.title,
   }
 
   return (
