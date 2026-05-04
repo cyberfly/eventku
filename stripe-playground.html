@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stripe Payment Flow — eventku</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d0d0d;
+    color: #e0e0e0;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 1fr auto;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  #sidebar {
+    background: #111;
+    border-right: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    grid-row: 1 / 3;
+  }
+
+  #sidebar h1 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 18px 16px 12px;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  #steps {
+    overflow-y: auto;
+    flex: 1;
+    padding: 10px 8px;
+  }
+
+  .step-btn {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 12px;
+    cursor: pointer;
+    color: #888;
+    font-size: 13px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background .15s, color .15s;
+    margin-bottom: 2px;
+  }
+  .step-btn:hover { background: #1a1a1a; color: #ccc; }
+  .step-btn.active { background: #1c2a1c; color: #6ee86e; }
+  .step-btn.active .step-num { background: #6ee86e; color: #0d1a0d; }
+
+  .step-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #222;
+    color: #666;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: background .15s, color .15s;
+  }
+
+  .step-label { line-height: 1.4; }
+  .step-label strong { display: block; font-size: 13px; font-weight: 600; }
+  .step-label span { font-size: 11px; color: #555; }
+  .step-btn.active .step-label span { color: #4a8c4a; }
+
+  .section-header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #444;
+    padding: 12px 12px 4px;
+  }
+
+  /* LEGEND */
+  #legend {
+    padding: 12px 16px;
+    border-top: 1px solid #1e1e1e;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #666;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* MAIN */
+  #main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* FLOW DIAGRAM */
+  #diagram {
+    flex: 1;
+    overflow: auto;
+    padding: 24px 32px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  #flow-container {
+    width: 100%;
+    max-width: 860px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 4px;
+  }
+
+  .flow-node {
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    line-height: 1.4;
+    border: 1.5px solid #2a2a2a;
+    background: #161616;
+    cursor: pointer;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    position: relative;
+  }
+  .flow-node:hover { border-color: #444; background: #1c1c1c; }
+  .flow-node.highlighted {
+    border-color: #6ee86e;
+    background: #0f1f0f;
+    box-shadow: 0 0 0 3px rgba(110,232,110,.12);
+  }
+  .flow-node.dim { opacity: .3; }
+
+  .node-tag {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin-bottom: 4px;
+  }
+  .node-title { font-weight: 600; color: #ddd; font-size: 13px; }
+  .node-detail { font-size: 11px; color: #666; margin-top: 2px; }
+
+  /* actor colors */
+  .actor-browser .node-tag { color: #60a5fa; }
+  .actor-browser { border-color: #1e3a5f; }
+  .actor-browser.highlighted { border-color: #60a5fa; background: #0a1a2e; box-shadow: 0 0 0 3px rgba(96,165,250,.12); }
+
+  .actor-server .node-tag { color: #f59e0b; }
+  .actor-server { border-color: #3d2a00; }
+  .actor-server.highlighted { border-color: #f59e0b; background: #1f1500; box-shadow: 0 0 0 3px rgba(245,158,11,.12); }
+
+  .actor-stripe .node-tag { color: #a78bfa; }
+  .actor-stripe { border-color: #2d1f5e; }
+  .actor-stripe.highlighted { border-color: #a78bfa; background: #150d2e; box-shadow: 0 0 0 3px rgba(167,139,250,.12); }
+
+  .actor-db .node-tag { color: #f87171; }
+  .actor-db { border-color: #3d1515; }
+  .actor-db.highlighted { border-color: #f87171; background: #1f0a0a; box-shadow: 0 0 0 3px rgba(248,113,113,.12); }
+
+  /* arrows */
+  .arrow-right {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    color: #333;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .arrow-down {
+    display: flex;
+    justify-content: center;
+    color: #333;
+    font-size: 14px;
+    padding: 2px 0;
+    margin-left: 80px;
+  }
+  .arrow-label {
+    font-size: 10px;
+    color: #555;
+    padding: 0 2px;
+    align-self: center;
+  }
+
+  /* DETAIL PANEL */
+  #detail {
+    background: #0f0f0f;
+    border-top: 1px solid #1e1e1e;
+    padding: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #detail-header {
+    padding: 12px 20px 10px;
+    border-bottom: 1px solid #1a1a1a;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    background: #0f0f0f;
+    z-index: 1;
+  }
+
+  #detail-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e0e0e0;
+  }
+
+  #detail-file {
+    font-size: 11px;
+    color: #555;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  #detail-body {
+    padding: 12px 20px 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .detail-section h3 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #555;
+    margin-bottom: 8px;
+  }
+
+  .detail-section p {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.6;
+  }
+
+  pre {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 11px;
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 6px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    line-height: 1.6;
+    color: #bbb;
+  }
+
+  .kw { color: #c084fc; }
+  .fn { color: #60a5fa; }
+  .str { color: #86efac; }
+  .cm { color: #555; font-style: italic; }
+  .num { color: #fb923c; }
+  .prop { color: #fde68a; }
+
+  /* PROMPT OUTPUT */
+  #prompt-section {
+    background: #0a0a0a;
+    border-top: 1px solid #1e1e1e;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  #prompt-text {
+    flex: 1;
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  #copy-btn {
+    background: #1e2e1e;
+    border: 1px solid #2a3e2a;
+    color: #6ee86e;
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  #copy-btn:hover { background: #243424; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <h1>Stripe Flow — eventku</h1>
+  <div id="steps">
+    <div class="section-header">Booking Phase</div>
+
+    <button class="step-btn active" data-step="0" onclick="selectStep(0)">
+      <span class="step-num">1</span>
+      <span class="step-label">
+        <strong>Submit Booking Form</strong>
+        <span>Browser → Server</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="1" onclick="selectStep(1)">
+      <span class="step-num">2</span>
+      <span class="step-label">
+        <strong>Validate Event &amp; Availability</strong>
+        <span>Server reads DB</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="2" onclick="selectStep(2)">
+      <span class="step-num">3</span>
+      <span class="step-label">
+        <strong>Create Stripe Session</strong>
+        <span>Server → Stripe API</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="3" onclick="selectStep(3)">
+      <span class="step-num">4</span>
+      <span class="step-label">
+        <strong>Insert Pending Record</strong>
+        <span>checkout_sessions (pending)</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="4" onclick="selectStep(4)">
+      <span class="step-num">5</span>
+      <span class="step-label">
+        <strong>Redirect to Stripe Checkout</strong>
+        <span>Browser → stripe.com</span>
+      </span>
+    </button>
+
+    <div class="section-header">Payment Phase</div>
+
+    <button class="step-btn" data-step="5" onclick="selectStep(5)">
+      <span class="step-num">6</span>
+      <span class="step-label">
+        <strong>User Pays on Stripe</strong>
+        <span>Hosted checkout page</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="6" onclick="selectStep(6)">
+      <span class="step-num">7</span>
+      <span class="step-label">
+        <strong>Webhook Received</strong>
+        <span>/api/stripe/webhook POST</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="7" onclick="selectStep(7)">
+      <span class="step-num">8</span>
+      <span class="step-label">
+        <strong>Signature Verification</strong>
+        <span>STRIPE_WEBHOOK_SECRET</span>
+      </span>
+    </button>
+
+    <div class="section-header">Fulfillment Phase</div>
+
+    <button class="step-btn" data-step="8" onclick="selectStep(8)">
+      <span class="step-num">9</span>
+      <span class="step-label">
+        <strong>Fulfill — Re-validate &amp; Enroll</strong>
+        <span>Insert enrollment row</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="9" onclick="selectStep(9)">
+      <span class="step-num">10</span>
+      <span class="step-label">
+        <strong>Mark Session Completed</strong>
+        <span>checkout_sessions (completed)</span>
+      </span>
+    </button>
+
+    <button class="step-btn" data-step="10" onclick="selectStep(10)">
+      <span class="step-num">11</span>
+      <span class="step-label">
+        <strong>Success Page</strong>
+        <span>/events/:slug/success</span>
+      </span>
+    </button>
+  </div>
+
+  <div id="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#60a5fa"></div> Browser</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Server</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div> Stripe</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div> SQLite DB</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="diagram">
+    <div id="flow-container">
+
+      <!-- Row 1: form submit -->
+      <div class="flow-row">
+        <div class="flow-node actor-browser" data-nodes="0" onclick="selectStep(0)">
+          <div class="node-tag">Browser</div>
+          <div class="node-title">Booking Form Submit</div>
+          <div class="node-detail">/events/:slug · name + email</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="flow-node actor-server" data-nodes="0,1,2,3,4" onclick="selectStep(1)">
+          <div class="node-tag">Server fn</div>
+          <div class="node-title">createCheckoutSession()</div>
+          <div class="node-detail">src/server/stripe.ts</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:360px">↓</div>
+
+      <!-- Row 2: validation + DB read -->
+      <div class="flow-row" style="margin-left:200px">
+        <div class="flow-node actor-db" data-nodes="1" onclick="selectStep(1)">
+          <div class="node-tag">SQLite</div>
+          <div class="node-title">Check: published, seats, duplicate email</div>
+          <div class="node-detail">courses + enrollments tables</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:360px">↓</div>
+
+      <!-- Row 3: Stripe API call -->
+      <div class="flow-row" style="margin-left:200px">
+        <div class="flow-node actor-stripe" data-nodes="2" onclick="selectStep(2)">
+          <div class="node-tag">Stripe API</div>
+          <div class="node-title">stripe.checkout.sessions.create()</div>
+          <div class="node-detail">mode: payment · currency: MYR · expires: 30 min</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="flow-node actor-db" data-nodes="3" onclick="selectStep(3)">
+          <div class="node-tag">SQLite</div>
+          <div class="node-title">INSERT checkout_sessions</div>
+          <div class="node-detail">status: pending</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:260px">↓</div>
+
+      <!-- Row 4: redirect -->
+      <div class="flow-row" style="margin-left:130px">
+        <div class="flow-node actor-browser" data-nodes="4" onclick="selectStep(4)">
+          <div class="node-tag">Browser</div>
+          <div class="node-title">Redirect → Stripe Hosted Checkout</div>
+          <div class="node-detail">session.url · user enters card details</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:260px">↓</div>
+
+      <!-- Row 5: stripe pays + webhook -->
+      <div class="flow-row" style="margin-left:130px">
+        <div class="flow-node actor-stripe" data-nodes="5" onclick="selectStep(5)">
+          <div class="node-tag">Stripe</div>
+          <div class="node-title">Payment Confirmed</div>
+          <div class="node-detail">checkout.session.completed event</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="arrow-label">webhook POST</div>
+        <div class="arrow-right"></div>
+        <div class="flow-node actor-server" data-nodes="6,7" onclick="selectStep(6)">
+          <div class="node-tag">Server</div>
+          <div class="node-title">/api/stripe/webhook</div>
+          <div class="node-detail">verify sig → fulfillCheckoutSession()</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:540px">↓</div>
+
+      <!-- Row 6: fulfill -->
+      <div class="flow-row" style="margin-left:410px">
+        <div class="flow-node actor-db" data-nodes="8" onclick="selectStep(8)">
+          <div class="node-tag">SQLite</div>
+          <div class="node-title">Re-validate + INSERT enrollment</div>
+          <div class="node-detail">status: Confirmed · progress: 0</div>
+        </div>
+        <div class="arrow-right">→</div>
+        <div class="flow-node actor-db" data-nodes="9" onclick="selectStep(9)">
+          <div class="node-tag">SQLite</div>
+          <div class="node-title">UPDATE checkout_sessions</div>
+          <div class="node-detail">status: completed</div>
+        </div>
+      </div>
+
+      <div class="arrow-down" style="margin-left:260px">↓</div>
+
+      <!-- Row 7: success page -->
+      <div class="flow-row" style="margin-left:130px">
+        <div class="flow-node actor-browser" data-nodes="10" onclick="selectStep(10)">
+          <div class="node-tag">Browser</div>
+          <div class="node-title">Success Page</div>
+          <div class="node-detail">/events/:slug/success?session_id=... · confirmation code NS-{courseId}-{enrollId}</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div id="detail">
+    <div id="detail-header">
+      <div id="detail-title">Submit Booking Form</div>
+      <div id="detail-file"></div>
+    </div>
+    <div id="detail-body">
+      <div class="detail-section">
+        <h3>What happens</h3>
+        <p id="detail-what"></p>
+      </div>
+      <div class="detail-section">
+        <h3>Code</h3>
+        <pre id="detail-code"></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMPT OUTPUT -->
+  <div id="prompt-section">
+    <div id="prompt-text"></div>
+    <button id="copy-btn" onclick="copyPrompt()">Copy</button>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  {
+    title: "Submit Booking Form",
+    file: "src/routes/events/$eventSlug/index.tsx",
+    nodes: [0],
+    what: "The user fills in their name and email on the event page. On submit, the browser calls the createCheckoutSession server function via TanStack Start's createServerFn mechanism.",
+    code: `<span class="cm">// Route component calls the server fn</span>
+<span class="kw">const</span> result = <span class="kw">await</span> <span class="fn">createCheckoutSession</span>({
+  slug: params.eventSlug,
+  <span class="prop">attendeeName</span>: formData.name,
+  <span class="prop">attendeeEmail</span>: formData.email,
+})
+<span class="cm">// Then redirect to result.url (Stripe)</span>`,
+  },
+  {
+    title: "Validate Event & Availability",
+    file: "src/server/stripe.ts : createCheckoutSession()",
+    nodes: [1],
+    what: "Three guards run before any Stripe call: (1) the course must exist and be published, (2) existing enrollments must be below seatCap, (3) the email must not already have a confirmed enrollment. If any guard fails, an error is thrown before Stripe is contacted — no wasted API calls.",
+    code: `<span class="cm">// Guard 1 — event exists & published</span>
+<span class="kw">if</span> (!course) <span class="kw">throw new</span> Error(<span class="str">'no longer available'</span>)
+
+<span class="cm">// Guard 2 — seat cap</span>
+<span class="kw">if</span> (registrations.length >= course.seatCap)
+  <span class="kw">throw new</span> Error(<span class="str">'sold out'</span>)
+
+<span class="cm">// Guard 3 — duplicate email</span>
+<span class="kw">if</span> (alreadyRegistered)
+  <span class="kw">throw new</span> Error(<span class="str">'already registered'</span>)`,
+  },
+  {
+    title: "Create Stripe Checkout Session",
+    file: "src/server/stripe.ts : line 54",
+    nodes: [2],
+    what: "A Stripe Checkout session is created in 'payment' mode. Price is fetched from the static eventExperience map (in MYR), multiplied by 100 for cents. The session expires in 30 minutes. Success/cancel URLs embed the event slug and {CHECKOUT_SESSION_ID} placeholder.",
+    code: `<span class="kw">const</span> session = <span class="kw">await</span> stripe.checkout.sessions.<span class="fn">create</span>({
+  <span class="prop">mode</span>: <span class="str">'payment'</span>,
+  <span class="prop">customer_email</span>: normalizedEmail,
+  <span class="prop">line_items</span>: [{
+    <span class="prop">quantity</span>: <span class="num">1</span>,
+    <span class="prop">price_data</span>: {
+      <span class="prop">currency</span>: <span class="str">'myr'</span>,
+      <span class="prop">unit_amount</span>: experience.price * <span class="num">100</span>,
+      <span class="prop">product_data</span>: { <span class="prop">name</span>: experience.title }
+    }
+  }],
+  <span class="prop">expires_at</span>: Math.<span class="fn">floor</span>(Date.<span class="fn">now</span>() / <span class="num">1000</span>) + <span class="num">30</span> * <span class="num">60</span>,
+  <span class="prop">success_url</span>: <span class="str">\`\${baseUrl}/events/\${slug}/success?session_id={CHECKOUT_SESSION_ID}\`</span>
+})`,
+  },
+  {
+    title: "Insert Pending checkout_sessions Row",
+    file: "src/server/stripe.ts : line 75 · src/db/schema.ts",
+    nodes: [3],
+    what: "Immediately after the Stripe session is created, a row is written to checkout_sessions with status 'pending'. This acts as an audit trail. Even if the user never pays, this record exists. The stripeSessionId links our record to Stripe's.",
+    code: `db.<span class="fn">insert</span>(checkoutSessions).<span class="fn">values</span>({
+  <span class="prop">stripeSessionId</span>: session.id,  <span class="cm">// Stripe's cs_xxx ID</span>
+  <span class="prop">courseId</span>: course.id,
+  <span class="prop">attendeeName</span>: input.attendeeName.trim(),
+  <span class="prop">attendeeEmail</span>: normalizedEmail,
+  <span class="prop">status</span>: <span class="str">'pending'</span>,
+  <span class="prop">createdAt</span>: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+}).<span class="fn">run</span>()`,
+  },
+  {
+    title: "Redirect Browser to Stripe",
+    file: "src/routes/events/$eventSlug/index.tsx",
+    nodes: [4],
+    what: "The server function returns { url: session.url }. The browser route handler navigates to this Stripe-hosted URL. From this point, the user is on Stripe's infrastructure. Our server has no involvement until the webhook fires.",
+    code: `<span class="cm">// Back in the route component</span>
+<span class="kw">const</span> { url } = <span class="kw">await</span> <span class="fn">createCheckoutSession</span>(...)
+window.location.href = url
+<span class="cm">// → https://checkout.stripe.com/c/pay/cs_live_...</span>`,
+  },
+  {
+    title: "User Pays on Stripe Hosted Checkout",
+    file: "(Stripe infrastructure — no app code runs)",
+    nodes: [5],
+    what: "The user enters card details on Stripe's hosted page. Stripe handles PCI compliance, 3D Secure, retries, etc. If the user abandons or closes the tab, the session expires after 30 minutes. Our app does nothing until Stripe fires the webhook.",
+    code: `<span class="cm">// No app code runs here.
+// Stripe owns the payment page.
+// Session expires_at = now + 30 min
+// On success → Stripe fires POST webhook
+// On cancel → user returns to cancel_url</span>`,
+  },
+  {
+    title: "Webhook Received",
+    file: "src/routes/api/stripe/webhook.ts",
+    nodes: [6],
+    what: "Stripe sends a POST to /api/stripe/webhook with the raw body and a stripe-signature header. The handler reads the raw body as text (not JSON) — this is critical for signature verification. It checks for the header before doing anything else.",
+    code: `<span class="kw">const</span> rawBody = <span class="kw">await</span> request.<span class="fn">text</span>()  <span class="cm">// NOT .json()!</span>
+<span class="kw">const</span> sig = request.headers.<span class="fn">get</span>(<span class="str">'stripe-signature'</span>)
+
+<span class="kw">if</span> (!sig) <span class="kw">return new</span> <span class="fn">Response</span>(<span class="str">'Missing signature'</span>, {
+  <span class="prop">status</span>: <span class="num">400</span>
+})`,
+  },
+  {
+    title: "Signature Verification",
+    file: "src/routes/api/stripe/webhook.ts : line 18",
+    nodes: [7],
+    what: "stripe.webhooks.constructEvent() verifies the HMAC signature using STRIPE_WEBHOOK_SECRET. This proves the webhook came from Stripe, not a spoofed request. If verification fails, a 400 is returned. Only checkout.session.completed events trigger fulfillment — other event types are silently acknowledged.",
+    code: `<span class="kw">let</span> event
+<span class="kw">try</span> {
+  event = stripe.webhooks.<span class="fn">constructEvent</span>(
+    rawBody, sig,
+    process.env.<span class="prop">STRIPE_WEBHOOK_SECRET</span>!
+  )
+} <span class="kw">catch</span> (err) {
+  <span class="kw">return new</span> <span class="fn">Response</span>(<span class="str">\`Webhook Error: \${err.message}\`</span>, { <span class="prop">status</span>: <span class="num">400</span> })
+}
+
+<span class="kw">if</span> (event.type === <span class="str">'checkout.session.completed'</span>) {
+  <span class="kw">await</span> <span class="fn">fulfillCheckoutSession</span>(session.id)
+}`,
+  },
+  {
+    title: "Re-validate & Insert Enrollment",
+    file: "src/server/stripe.ts : fulfillCheckoutSession()",
+    nodes: [8],
+    what: "fulfillCheckoutSession re-runs the seat cap and duplicate-email guards because the time between session creation and webhook receipt could allow a race condition (another booking may have filled the last seat). Only then does it insert the enrollment row with status 'Confirmed'.",
+    code: `<span class="cm">// Guards run again — race condition safety</span>
+<span class="kw">if</span> (registrations.length >= course.seatCap)
+  <span class="kw">throw new</span> Error(<span class="str">'sold out'</span>)
+
+<span class="cm">// Insert confirmed enrollment</span>
+<span class="kw">const</span> result = db.<span class="fn">insert</span>(enrollments).<span class="fn">values</span>({
+  <span class="prop">courseId</span>: course.id,
+  <span class="prop">learnerName</span>: session.attendeeName,
+  <span class="prop">learnerEmail</span>: session.attendeeEmail,
+  <span class="prop">status</span>: <span class="str">'Confirmed'</span>,
+  <span class="prop">progress</span>: <span class="num">0</span>,
+  <span class="prop">enrolledAt</span>: <span class="kw">new</span> Date().<span class="fn">toISOString</span>(),
+}).<span class="fn">run</span>()`,
+  },
+  {
+    title: "Mark checkout_sessions Completed",
+    file: "src/server/stripe.ts : fulfillCheckoutSession() : line 142",
+    nodes: [9],
+    what: "After inserting the enrollment, the checkout_sessions row is updated to 'completed'. This is idempotent — fulfillCheckoutSession checks the status at the top and returns early if already completed, so Stripe can safely retry the webhook.",
+    code: `<span class="cm">// Idempotency guard at top of function:</span>
+<span class="kw">if</span> (session.status === <span class="str">'completed'</span>) <span class="kw">return</span>
+
+<span class="cm">// After enrollment inserted:</span>
+db.<span class="fn">update</span>(checkoutSessions)
+  .<span class="fn">set</span>({ <span class="prop">status</span>: <span class="str">'completed'</span> })
+  .<span class="fn">where</span>(<span class="fn">eq</span>(checkoutSessions.stripeSessionId, id))
+  .<span class="fn">run</span>()
+
+<span class="cm">// Confirmation code: NS-{courseId}-{enrollId zero-padded}</span>
+<span class="kw">return</span> { <span class="prop">confirmationCode</span>: <span class="str">\`NS-\${courseId}-\${id.padStart(4,'0')}\`</span> }`,
+  },
+  {
+    title: "Success Page",
+    file: "src/routes/events/$eventSlug/success.tsx",
+    nodes: [10],
+    what: "The user's browser (which was waiting on Stripe's success_url redirect) lands on /events/:slug/success?session_id=cs_xxx. getCheckoutSessionForSuccess() looks up the completed session and returns attendee name, email, course title, and the confirmation code. If status is not 'completed', it returns null and the page shows an error.",
+    code: `<span class="kw">export function</span> <span class="fn">getCheckoutSessionForSuccess</span>(id: string) {
+  <span class="kw">const</span> session = db.<span class="fn">select</span>()....<span class="fn">get</span>()
+
+  <span class="cm">// Only show if payment is done</span>
+  <span class="kw">if</span> (!session || session.status !== <span class="str">'completed'</span>)
+    <span class="kw">return null</span>
+
+  <span class="kw">const</span> code = <span class="str">\`NS-\${session.courseId}-\${String(enrollment.id).padStart(4,'0')}\`</span>
+  <span class="kw">return</span> { attendeeName, attendeeEmail, courseTitle, code }
+}`,
+  },
+];
+
+let currentStep = 0;
+
+function selectStep(idx) {
+  currentStep = idx;
+
+  // Update sidebar buttons
+  document.querySelectorAll('.step-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i === idx);
+  });
+
+  // Update flow nodes
+  const step = STEPS[idx];
+  document.querySelectorAll('.flow-node').forEach(node => {
+    const nodeIds = node.dataset.nodes?.split(',').map(Number) || [];
+    const isHighlighted = nodeIds.some(n => step.nodes.includes(n));
+    node.classList.toggle('highlighted', isHighlighted);
+    node.classList.toggle('dim', !isHighlighted);
+  });
+
+  // Update detail panel
+  document.getElementById('detail-title').textContent = step.title;
+  document.getElementById('detail-file').textContent = step.file;
+  document.getElementById('detail-what').textContent = step.what;
+  document.getElementById('detail-code').innerHTML = step.code;
+
+  // Update prompt
+  updatePrompt();
+}
+
+function updatePrompt() {
+  const step = STEPS[currentStep];
+  const num = currentStep + 1;
+  const phases = ['Booking', 'Booking', 'Booking', 'Booking', 'Booking', 'Payment', 'Payment', 'Payment', 'Fulfillment', 'Fulfillment', 'Fulfillment'];
+  const phase = phases[currentStep];
+  document.getElementById('prompt-text').textContent =
+    `Explain step ${num} of the Stripe payment flow in eventku — "${step.title}" (${phase} phase). ` +
+    `File: ${step.file}. Focus on: ${step.what.slice(0, 100)}...`;
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-text').textContent;
+  navigator.clipboard.writeText(text);
+  const btn = document.getElementById('copy-btn');
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+
+// Init
+selectStep(0);
+</script>
+</body>
+</html>
