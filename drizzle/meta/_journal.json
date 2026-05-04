@@ -15,6 +15,13 @@
       "when": 1774876232263,
       "tag": "0001_lean_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1777907253077,
+      "tag": "0002_public_jasper_sitwell",
+      "breakpoints": true
     }
   ]
 }
