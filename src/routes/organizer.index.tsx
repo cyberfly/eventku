@@ -39,6 +39,9 @@ function OrganizerDashboardPage() {
           <Link className="primary-link" to="/organizer/new">
             Create course
           </Link>
+          <Link className="ghost-link" to="/organizer/orders">
+            View orders
+          </Link>
           <button
             className="ghost-button"
             onClick={async () => {
