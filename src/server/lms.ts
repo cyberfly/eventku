@@ -241,6 +241,18 @@ export function getEventDetail(slug: string) {
   }
 }
 
+type RegistrationErrorCode = 'EVENT_NOT_FOUND' | 'SOLD_OUT' | 'ALREADY_REGISTERED'
+
+export class RegistrationError extends Error {
+  constructor(
+    public readonly code: RegistrationErrorCode,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'RegistrationError'
+  }
+}
+
 type PurchaseEventInput = {
   attendeeEmail: string
   attendeeName: string
@@ -256,7 +268,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .get()
 
   if (!course) {
-    throw new Error('This event is no longer available.')
+    throw new RegistrationError('EVENT_NOT_FOUND', 'This event is no longer available.')
   }
 
   const existingRegistrations = database
@@ -266,7 +278,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .all()
 
   if (existingRegistrations.length >= course.seatCap) {
-    throw new Error('This event is sold out.')
+    throw new RegistrationError('SOLD_OUT', 'This event is sold out.')
   }
 
   const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
@@ -275,7 +287,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
   )
 
   if (alreadyRegistered) {
-    throw new Error('This attendee already has a confirmed registration.')
+    throw new RegistrationError('ALREADY_REGISTERED', 'This attendee already has a confirmed registration.')
   }
 
   const result = database
