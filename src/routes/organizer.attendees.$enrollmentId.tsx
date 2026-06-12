@@ -131,7 +131,11 @@ function OrganizerAttendeeDetailPage() {
                 Status
                 <select
                   disabled={isSubmitting}
-                  onChange={(event) => setSelectedStatus(event.target.value)}
+                  onChange={(event) =>
+                    setSelectedStatus(
+                      event.target.value as (typeof attendeeStatusOptions)[number],
+                    )
+                  }
                   value={selectedStatus}
                 >
                   {attendeeStatusOptions.map((option) => (
