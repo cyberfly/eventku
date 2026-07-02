@@ -2,7 +2,6 @@ import { and, eq } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
 import { courses, enrollments, lessons, modules } from '@/db/schema'
-import { getEventExperience } from '@/lib/events'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -42,26 +41,34 @@ function sortByDateAsc<T>(rows: T[], getDate: (row: T) => string) {
   )
 }
 
-function getEventDetails(course: CourseRow) {
-  const configured = getEventExperience(course.slug)
+function parseStringList(value: string) {
+  try {
+    const parsed = JSON.parse(value)
 
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+function getEventDetails(course: CourseRow) {
   return {
     accent: course.accent,
-    audience: configured?.audience ?? 'Training teams and operators',
-    category: configured?.category ?? course.category,
-    city: configured?.city ?? 'Online',
-    endAt: configured?.endAt ?? course.createdAt,
-    format: configured?.format ?? course.level,
-    heroNote: configured?.heroNote ?? 'Live training event',
-    highlights: configured?.highlights ?? [],
-    organizerName: configured?.organizerName ?? course.instructorName,
-    price: configured?.price ?? 129,
-    startAt: configured?.startAt ?? course.createdAt,
-    summary: configured?.summary ?? course.summary,
-    takeaways: configured?.takeaways ?? [],
-    title: configured?.title ?? course.title,
-    venue: configured?.venue ?? 'Eventku Live',
-    hostBio: configured?.hostBio ?? `${course.instructorName} leads this event.`,
+    audience: course.audience,
+    category: course.category,
+    city: course.city,
+    endAt: course.endAt,
+    format: course.format,
+    heroNote: course.heroNote,
+    highlights: parseStringList(course.highlights),
+    organizerName: course.instructorName,
+    price: course.price,
+    startAt: course.startAt,
+    summary: course.summary,
+    takeaways: parseStringList(course.takeaways),
+    title: course.title,
+    venue: course.venue,
+    hostBio: course.hostBio,
   }
 }
 

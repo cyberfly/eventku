@@ -320,6 +320,17 @@ export function createOrganizerCourse(input: OrganizerCourseInput) {
       completionRate: input.completionRate,
       instructorName: input.instructorName.trim(),
       accent: input.accent,
+      price: input.price,
+      format: input.format,
+      venue: input.venue.trim(),
+      city: input.city.trim(),
+      audience: input.audience.trim(),
+      heroNote: input.heroNote.trim(),
+      hostBio: input.hostBio.trim(),
+      startAt: new Date(input.startAt).toISOString(),
+      endAt: new Date(input.endAt).toISOString(),
+      highlights: JSON.stringify(input.highlights.map((item) => item.trim())),
+      takeaways: JSON.stringify(input.takeaways.map((item) => item.trim())),
       createdAt: now,
     })
     .run()
@@ -421,6 +432,17 @@ export function updateOrganizerCourse(
       completionRate: input.completionRate,
       instructorName: input.instructorName.trim(),
       accent: input.accent,
+      price: input.price,
+      format: input.format,
+      venue: input.venue.trim(),
+      city: input.city.trim(),
+      audience: input.audience.trim(),
+      heroNote: input.heroNote.trim(),
+      hostBio: input.hostBio.trim(),
+      startAt: new Date(input.startAt).toISOString(),
+      endAt: new Date(input.endAt).toISOString(),
+      highlights: JSON.stringify(input.highlights.map((item) => item.trim())),
+      takeaways: JSON.stringify(input.takeaways.map((item) => item.trim())),
     })
     .where(eq(courses.id, courseId))
     .run()

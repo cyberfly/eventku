@@ -760,6 +760,105 @@ textarea {
   resize: vertical;
 }
 
+.course-form input.has-error,
+.course-form select.has-error,
+.course-form textarea.has-error {
+  border-color: #a4322a;
+}
+
+.form-section {
+  display: grid;
+  gap: 14px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(31, 37, 32, 0.08);
+}
+
+.form-section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.form-section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.form-field-label {
+  margin: 0;
+  font-weight: 700;
+}
+
+.form-hint {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.field-error {
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: #a4322a;
+  font-weight: 600;
+}
+
+.dynamic-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.dynamic-list-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.dynamic-list-row input {
+  flex: 1;
+}
+
+.dynamic-list-remove {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dynamic-list-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dynamic-list-add {
+  justify-self: start;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.color-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-field input[type='color'] {
+  width: 48px;
+  height: 40px;
+  padding: 4px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
 .organizer-auth-layout {
   display: grid;
   min-height: 68vh;
