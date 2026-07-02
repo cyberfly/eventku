@@ -119,6 +119,7 @@ export const organizerCourseInput = z
       )
       .min(1, 'Add at least one takeaway.')
       .max(8, 'Takeaways are capped at 8 items.'),
+    featuredImage: z.string().max(300).nullable(),
   })
   .superRefine((value, ctx) => {
     const start = new Date(value.startAt)
@@ -179,6 +180,7 @@ export const defaultCourseFormState: OrganizerCourseInput = {
   endAt: '',
   highlights: [''],
   takeaways: [''],
+  featuredImage: null,
 }
 
 export function slugifyValue(value: string) {

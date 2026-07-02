@@ -58,6 +58,7 @@ function getEventDetails(course: CourseRow) {
     category: course.category,
     city: course.city,
     endAt: course.endAt,
+    featuredImage: course.featuredImage,
     format: course.format,
     heroNote: course.heroNote,
     highlights: parseStringList(course.highlights),

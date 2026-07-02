@@ -60,6 +60,7 @@ export const courses = sqliteTable(
     endAt: text('end_at').notNull().default('2026-01-01T01:00:00.000Z'),
     highlights: text('highlights').notNull().default('[]'),
     takeaways: text('takeaways').notNull().default('[]'),
+    featuredImage: text('featured_image'),
     createdAt: text('created_at').notNull(),
   },
   (table) => ({

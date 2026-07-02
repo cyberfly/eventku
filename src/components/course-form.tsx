@@ -1,3 +1,5 @@
+import type { ChangeEvent } from 'react'
+
 import { useEffect, useState } from 'react'
 
 import type { OrganizerCourseInput } from '@/lib/organizer'
@@ -10,6 +12,7 @@ import {
   organizerCourseInput,
   slugifyValue,
 } from '@/lib/organizer'
+import { uploadCourseImageFn } from '@/lib/organizer-server-fns'
 
 type CourseFormProps = {
   errorMessage?: string | null
@@ -146,13 +149,43 @@ export function CourseForm({
   )
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null)
 
   useEffect(() => {
     setFormState(initialValues)
     setHasCustomSlug(initialValues.slug.length > 0)
     setFieldErrors({})
     setHasAttemptedSubmit(false)
+    setImageUploadError(null)
   }, [initialValues])
+
+  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    setImageUploadError(null)
+    setIsUploadingImage(true)
+
+    try {
+      const body = new FormData()
+      body.set('file', file)
+
+      const result = await uploadCourseImageFn({ data: body })
+
+      setFormState((current) => ({ ...current, featuredImage: result.url }))
+    } catch (error) {
+      setImageUploadError(
+        error instanceof Error ? error.message : 'Unable to upload image.',
+      )
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
 
   useEffect(() => {
     if (!hasAttemptedSubmit) {
@@ -250,6 +283,43 @@ export function CourseForm({
           />
           {fieldError('summary')}
         </label>
+      </div>
+
+      <div className="form-section">
+        <p className="form-section-title">Featured Image</p>
+        <p className="form-hint">
+          Shown on event cards and the hero banner. JPEG, PNG, WebP, or GIF, up to 5MB.
+        </p>
+        {formState.featuredImage ? (
+          <img
+            alt="Featured event"
+            className="featured-image-preview"
+            src={formState.featuredImage}
+          />
+        ) : null}
+        <div className="featured-image-actions">
+          <input
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            disabled={isUploadingImage}
+            onChange={handleImageChange}
+            type="file"
+          />
+          {formState.featuredImage ? (
+            <button
+              className="ghost-button"
+              disabled={isUploadingImage}
+              onClick={() =>
+                setFormState((current) => ({ ...current, featuredImage: null }))
+              }
+              type="button"
+            >
+              Remove image
+            </button>
+          ) : null}
+          {isUploadingImage ? <span className="form-hint">Uploading...</span> : null}
+        </div>
+        {imageUploadError ? <p className="field-error">{imageUploadError}</p> : null}
+        {fieldError('featuredImage')}
       </div>
 
       <div className="form-section">

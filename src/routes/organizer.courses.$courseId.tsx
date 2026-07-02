@@ -83,6 +83,7 @@ function OrganizerCourseDetailPage() {
     endAt: data.course.endAt,
     highlights: parseStringListOrFallback(data.course.highlights),
     takeaways: parseStringListOrFallback(data.course.takeaways),
+    featuredImage: data.course.featuredImage,
   }
 
   return (
@@ -100,6 +101,7 @@ function OrganizerCourseDetailPage() {
           <MediaPlaceholder
             accent={data.course.accent}
             eyebrow={data.course.category}
+            imageUrl={data.course.featuredImage}
             meta={data.course.status}
             title={data.course.title}
             variant="hero"
