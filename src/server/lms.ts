@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
 import { courses, enrollments, lessons, modules } from '@/db/schema'
+import { HttpError } from '@/lib/http'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -255,6 +256,15 @@ type PurchaseEventInput = {
   slug: string
 }
 
+export class RegistrationError extends HttpError {
+  code: 'EVENT_NOT_FOUND' | 'SOLD_OUT' | 'ALREADY_REGISTERED'
+
+  constructor(message: string, code: RegistrationError['code']) {
+    super(message, code === 'EVENT_NOT_FOUND' ? 404 : 409)
+    this.code = code
+  }
+}
+
 export function purchaseEventAccess(input: PurchaseEventInput) {
   const database = bootstrapDatabase()
   const course = database
@@ -264,7 +274,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .get()
 
   if (!course) {
-    throw new Error('This event is no longer available.')
+    throw new RegistrationError('This event is no longer available.', 'EVENT_NOT_FOUND')
   }
 
   const existingRegistrations = database
@@ -274,7 +284,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .all()
 
   if (existingRegistrations.length >= course.seatCap) {
-    throw new Error('This event is sold out.')
+    throw new RegistrationError('This event is sold out.', 'SOLD_OUT')
   }
 
   const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
@@ -283,7 +293,10 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
   )
 
   if (alreadyRegistered) {
-    throw new Error('This attendee already has a confirmed registration.')
+    throw new RegistrationError(
+      'This attendee already has a confirmed registration.',
+      'ALREADY_REGISTERED',
+    )
   }
 
   const result = database

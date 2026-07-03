@@ -14,6 +14,7 @@ import {
   organizers,
   organizerSessions,
 } from '@/db/schema'
+import { HttpError } from '@/lib/http'
 import type { OrganizerCourseInput, OrganizerLoginInput } from '@/lib/organizer'
 import { createSessionToken, normalizeEmail, verifyPassword } from '@/lib/organizer-auth'
 
@@ -111,11 +112,23 @@ function getOrganizerSessionRecord() {
   }
 }
 
+export class OrganizerAuthError extends HttpError {
+  constructor(message: string) {
+    super(message, 401)
+  }
+}
+
+export class OrganizerCourseNotFoundError extends HttpError {
+  constructor(message: string) {
+    super(message, 404)
+  }
+}
+
 function requireOrganizerSession() {
   const organizer = getOrganizerSessionRecord()
 
   if (!organizer) {
-    throw new Error('Organizer authentication required.')
+    throw new OrganizerAuthError('Organizer authentication required.')
   }
 
   return organizer
@@ -411,24 +424,38 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
-export function updateOrganizerCourse(
-  courseId: number,
-  input: OrganizerCourseInput,
-) {
-  const organizer = requireOrganizerSession()
+function requireOwnedCourseId(organizerId: number, courseId: number) {
   const database = bootstrapDatabase()
-  const existingCourse = database
-    .select({
-      id: courses.id,
-    })
+  const course = database
+    .select({ id: courses.id })
     .from(courses)
-    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizerId)))
     .get()
 
-  if (!existingCourse) {
-    throw new Error('Course not found.')
+  if (!course) {
+    throw new OrganizerCourseNotFoundError('Course not found.')
   }
 
+  return course.id
+}
+
+function requireOwnedCourseIdBySlug(organizerId: number, slug: string) {
+  const database = bootstrapDatabase()
+  const course = database
+    .select({ id: courses.id })
+    .from(courses)
+    .where(and(eq(courses.slug, slug), eq(courses.organizerId, organizerId)))
+    .get()
+
+  if (!course) {
+    throw new OrganizerCourseNotFoundError('Course not found.')
+  }
+
+  return course.id
+}
+
+function writeCourseUpdate(courseId: number, input: OrganizerCourseInput) {
+  const database = bootstrapDatabase()
   const slug = resolveUniqueSlug(input.slug, courseId)
 
   database
@@ -465,6 +492,30 @@ export function updateOrganizerCourse(
     courseId,
     slug,
   }
+}
+
+export function updateOrganizerCourse(
+  courseId: number,
+  input: OrganizerCourseInput,
+) {
+  const organizer = requireOrganizerSession()
+  requireOwnedCourseId(organizer.id, courseId)
+
+  return writeCourseUpdate(courseId, input)
+}
+
+export function updateOrganizerCourseBySlug(slug: string, input: OrganizerCourseInput) {
+  const organizer = requireOrganizerSession()
+  const courseId = requireOwnedCourseIdBySlug(organizer.id, slug)
+
+  return writeCourseUpdate(courseId, input)
+}
+
+export function deleteOrganizerCourseBySlug(slug: string) {
+  const organizer = requireOrganizerSession()
+  const courseId = requireOwnedCourseIdBySlug(organizer.id, slug)
+
+  bootstrapDatabase().delete(courses).where(eq(courses.id, courseId)).run()
 }
 
 export async function uploadCourseImage(formData: FormData) {
