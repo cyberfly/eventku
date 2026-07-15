@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
 import { courses, enrollments, lessons, modules } from '@/db/schema'
+import { HttpError } from '@/lib/http'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -264,7 +265,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .get()
 
   if (!course) {
-    throw new Error('This event is no longer available.')
+    throw new HttpError('This event is no longer available.', 404)
   }
 
   const existingRegistrations = database
@@ -274,7 +275,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .all()
 
   if (existingRegistrations.length >= course.seatCap) {
-    throw new Error('This event is sold out.')
+    throw new HttpError('This event is sold out.', 400)
   }
 
   const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
@@ -283,7 +284,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
   )
 
   if (alreadyRegistered) {
-    throw new Error('This attendee already has a confirmed registration.')
+    throw new HttpError('This attendee already has a confirmed registration.', 409)
   }
 
   const result = database
