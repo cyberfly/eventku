@@ -17,7 +17,12 @@ export default defineConfig({
       testMatch: /auth\.setup\.ts/,
     },
     {
+      name: 'api',
+      testMatch: /api\/.*\.spec\.ts/,
+    },
+    {
       name: 'chromium',
+      testIgnore: /api\/.*\.spec\.ts/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/state.json',
