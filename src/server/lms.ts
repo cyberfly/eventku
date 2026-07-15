@@ -8,6 +8,15 @@ type EnrollmentRow = typeof enrollments.$inferSelect
 type ModuleRow = typeof modules.$inferSelect
 type LessonRow = typeof lessons.$inferSelect
 
+export class EventAccessError extends Error {
+  code: 'not_found' | 'sold_out' | 'duplicate_registration'
+
+  constructor(code: EventAccessError['code'], message: string) {
+    super(message)
+    this.code = code
+  }
+}
+
 function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
   const counts = new Map<number, number>()
 
@@ -264,7 +273,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .get()
 
   if (!course) {
-    throw new Error('This event is no longer available.')
+    throw new EventAccessError('not_found', 'This event is no longer available.')
   }
 
   const existingRegistrations = database
@@ -274,7 +283,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .all()
 
   if (existingRegistrations.length >= course.seatCap) {
-    throw new Error('This event is sold out.')
+    throw new EventAccessError('sold_out', 'This event is sold out.')
   }
 
   const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
@@ -283,7 +292,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
   )
 
   if (alreadyRegistered) {
-    throw new Error('This attendee already has a confirmed registration.')
+    throw new EventAccessError('duplicate_registration', 'This attendee already has a confirmed registration.')
   }
 
   const result = database
