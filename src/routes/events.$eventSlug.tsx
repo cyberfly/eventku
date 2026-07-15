@@ -7,6 +7,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
 import { MediaPlaceholder } from '@/components/media-placeholder'
+import { registerEventAttendeeInput } from '@/lib/events'
 import { formatCurrency, formatEventDateTime, formatHours } from '@/lib/format'
 
 const getEventDetail = createServerFn({ method: 'GET' })
@@ -17,9 +18,7 @@ const getEventDetail = createServerFn({ method: 'GET' })
     return getEventDetail(data.slug)
   })
 
-const purchaseEventInput = z.object({
-  attendeeEmail: z.string().email(),
-  attendeeName: z.string().min(2).max(80),
+const purchaseEventInput = registerEventAttendeeInput.extend({
   slug: z.string().min(1),
 })
 
