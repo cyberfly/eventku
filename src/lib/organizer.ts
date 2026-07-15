@@ -31,6 +31,19 @@ export const organizerLoginInput = z.object({
   password: z.string().min(8).max(128),
 })
 
+export const eventRegistrationInput = z.object({
+  attendeeName: z
+    .string()
+    .trim()
+    .min(2, 'Attendee name must be at least 2 characters.')
+    .max(100, 'Attendee name must be 100 characters or fewer.'),
+  attendeeEmail: z
+    .string()
+    .trim()
+    .email('Enter a valid attendee email address.')
+    .max(254, 'Attendee email must be 254 characters or fewer.'),
+})
+
 export const organizerCourseInput = z
   .object({
     title: z
@@ -156,6 +169,7 @@ export const organizerCourseInput = z
 
 export type OrganizerLoginInput = z.infer<typeof organizerLoginInput>
 export type OrganizerCourseInput = z.infer<typeof organizerCourseInput>
+export type EventRegistrationInput = z.infer<typeof eventRegistrationInput>
 
 export const defaultCourseFormState: OrganizerCourseInput = {
   title: '',
