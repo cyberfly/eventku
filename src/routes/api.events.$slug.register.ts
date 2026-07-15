@@ -1,10 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
 
-const registerBodySchema = z.object({
-  attendeeEmail: z.string().email(),
-  attendeeName: z.string().min(2).max(80),
-})
+import { eventRegistrationInput } from '@/lib/events'
 
 function resolveRegistrationErrorStatus(message: string) {
   if (message === 'This event is no longer available.') {
@@ -18,12 +14,12 @@ export const Route = createFileRoute('/api/events/$slug/register')({
   server: {
     handlers: {
       POST: async ({ request, params }) => {
-        const rawBody = await request.json().catch(() => null)
-        const parsedBody = registerBodySchema.safeParse(rawBody)
+        const body = await request.json().catch(() => null)
+        const parsed = eventRegistrationInput.safeParse(body)
 
-        if (!parsedBody.success) {
+        if (!parsed.success) {
           return Response.json(
-            { error: parsedBody.error.issues[0]?.message ?? 'Invalid request body.' },
+            { error: parsed.error.issues[0]?.message ?? 'Invalid request body.' },
             { status: 400 },
           )
         }
@@ -32,15 +28,15 @@ export const Route = createFileRoute('/api/events/$slug/register')({
 
         try {
           const result = purchaseEventAccess({
-            attendeeEmail: parsedBody.data.attendeeEmail,
-            attendeeName: parsedBody.data.attendeeName,
+            attendeeEmail: parsed.data.attendeeEmail,
+            attendeeName: parsed.data.attendeeName,
             slug: params.slug,
           })
 
           return Response.json(result, { status: 201 })
         } catch (error) {
           const message =
-            error instanceof Error ? error.message : 'Unable to complete registration.'
+            error instanceof Error ? error.message : 'Unable to complete the registration.'
 
           return Response.json(
             { error: message },
