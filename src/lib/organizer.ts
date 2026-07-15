@@ -31,6 +31,11 @@ export const organizerLoginInput = z.object({
   password: z.string().min(8).max(128),
 })
 
+export const eventRegistrationInput = z.object({
+  attendeeEmail: z.string().email(),
+  attendeeName: z.string().min(2).max(80),
+})
+
 export const organizerCourseInput = z
   .object({
     title: z
@@ -156,6 +161,7 @@ export const organizerCourseInput = z
 
 export type OrganizerLoginInput = z.infer<typeof organizerLoginInput>
 export type OrganizerCourseInput = z.infer<typeof organizerCourseInput>
+export type EventRegistrationInput = z.infer<typeof eventRegistrationInput>
 
 export const defaultCourseFormState: OrganizerCourseInput = {
   title: '',
