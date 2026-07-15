@@ -8,6 +8,7 @@ import { z } from 'zod'
 
 import { MediaPlaceholder } from '@/components/media-placeholder'
 import { formatCurrency, formatEventDateTime, formatHours } from '@/lib/format'
+import { eventRegistrationInput } from '@/lib/events'
 
 const getEventDetail = createServerFn({ method: 'GET' })
   .inputValidator((input: { slug: string }) => input)
@@ -17,9 +18,7 @@ const getEventDetail = createServerFn({ method: 'GET' })
     return getEventDetail(data.slug)
   })
 
-const purchaseEventInput = z.object({
-  attendeeEmail: z.string().email(),
-  attendeeName: z.string().min(2).max(80),
+const purchaseEventInput = eventRegistrationInput.extend({
   slug: z.string().min(1),
 })
 

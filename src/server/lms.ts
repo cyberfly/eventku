@@ -255,6 +255,16 @@ type PurchaseEventInput = {
   slug: string
 }
 
+export class EventAccessError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'EventAccessError'
+    this.status = status
+  }
+}
+
 export function purchaseEventAccess(input: PurchaseEventInput) {
   const database = bootstrapDatabase()
   const course = database
@@ -264,7 +274,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .get()
 
   if (!course) {
-    throw new Error('This event is no longer available.')
+    throw new EventAccessError('This event is no longer available.', 404)
   }
 
   const existingRegistrations = database
@@ -274,7 +284,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     .all()
 
   if (existingRegistrations.length >= course.seatCap) {
-    throw new Error('This event is sold out.')
+    throw new EventAccessError('This event is sold out.', 400)
   }
 
   const normalizedEmail = input.attendeeEmail.trim().toLowerCase()
@@ -283,7 +293,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
   )
 
   if (alreadyRegistered) {
-    throw new Error('This attendee already has a confirmed registration.')
+    throw new EventAccessError('This attendee already has a confirmed registration.', 409)
   }
 
   const result = database
