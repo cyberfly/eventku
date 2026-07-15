@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 import { and, eq, inArray, lt } from 'drizzle-orm'
@@ -411,7 +411,7 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
-export function updateOrganizerCourse(
+export async function updateOrganizerCourse(
   courseId: number,
   input: OrganizerCourseInput,
 ) {
@@ -420,6 +420,7 @@ export function updateOrganizerCourse(
   const existingCourse = database
     .select({
       id: courses.id,
+      featuredImage: courses.featuredImage,
     })
     .from(courses)
     .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
@@ -461,9 +462,38 @@ export function updateOrganizerCourse(
     .where(eq(courses.id, courseId))
     .run()
 
+  if (
+    existingCourse.featuredImage &&
+    existingCourse.featuredImage !== input.featuredImage
+  ) {
+    await deleteCourseImage(existingCourse.featuredImage)
+  }
+
   return {
     courseId,
     slug,
+  }
+}
+
+const COURSE_IMAGE_URL_PREFIX = '/uploads/courses/'
+
+async function deleteCourseImage(imageUrl: string) {
+  if (!imageUrl.startsWith(COURSE_IMAGE_URL_PREFIX)) {
+    return
+  }
+
+  const filename = imageUrl.slice(COURSE_IMAGE_URL_PREFIX.length)
+
+  if (!filename || filename.includes('/') || filename.includes('\\')) {
+    return
+  }
+
+  try {
+    await unlink(resolve(COURSE_IMAGE_DIR, filename))
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+      throw error
+    }
   }
 }
 
