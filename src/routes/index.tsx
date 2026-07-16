@@ -72,6 +72,7 @@ function Home() {
                 <MediaPlaceholder
                   accent={event.accent}
                   eyebrow={event.category}
+                  imageUrl={event.featuredImage}
                   meta={`${event.format} • ${event.city}`}
                   title={event.title}
                   variant="row"

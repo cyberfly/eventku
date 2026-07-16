@@ -11,6 +11,7 @@ type EventCardProps = {
   category: string
   city: string
   durationHours: number
+  featuredImage?: string | null
   format: string
   price: number
   seatsRemaining: number
@@ -27,6 +28,7 @@ export function EventCard(props: EventCardProps) {
       <MediaPlaceholder
         accent={props.accent}
         eyebrow={props.category}
+        imageUrl={props.featuredImage}
         meta={`${props.format} • ${props.city}`}
         title={props.title}
       />
