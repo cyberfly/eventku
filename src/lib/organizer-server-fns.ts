@@ -11,6 +11,11 @@ const updateOrganizerCourseInput = organizerCourseInput.extend({
   courseId: z.number().int().positive(),
 })
 
+const attendeeActionInput = z.object({
+  attendeeId: z.number().int().positive(),
+  courseId: z.number().int().positive(),
+})
+
 export const getOrganizerSessionFn = createServerFn({ method: 'GET' }).handler(
   async () => {
     const { getOrganizerSession } = await import('@/server/organizer')
@@ -73,6 +78,36 @@ export const updateOrganizerCourseFn = createServerFn({ method: 'POST' })
     const { updateOrganizerCourse } = await import('@/server/organizer')
 
     return updateOrganizerCourse(data.courseId, data)
+  })
+
+export const getOrganizerCourseAttendeesFn = createServerFn({ method: 'GET' })
+  .inputValidator((input: z.infer<typeof courseIdInput>) =>
+    courseIdInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { getOrganizerCourseAttendees } = await import('@/server/organizer')
+
+    return getOrganizerCourseAttendees(data.courseId)
+  })
+
+export const checkInAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof attendeeActionInput>) =>
+    attendeeActionInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { checkInAttendee } = await import('@/server/organizer')
+
+    return checkInAttendee(data.courseId, data.attendeeId)
+  })
+
+export const cancelAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof attendeeActionInput>) =>
+    attendeeActionInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { cancelAttendeeRegistration } = await import('@/server/organizer')
+
+    return cancelAttendeeRegistration(data.courseId, data.attendeeId)
   })
 
 export const uploadCourseImageFn = createServerFn({ method: 'POST' })

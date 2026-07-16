@@ -411,6 +411,100 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
+export function getOrganizerCourseAttendees(courseId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select()
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    throw new Error('Course not found.')
+  }
+
+  const attendeeRows = database
+    .select()
+    .from(enrollments)
+    .where(eq(enrollments.courseId, course.id))
+    .all()
+    .sort(
+      (left, right) =>
+        new Date(right.enrolledAt).getTime() - new Date(left.enrolledAt).getTime(),
+    )
+
+  return {
+    attendees: attendeeRows,
+    course,
+  }
+}
+
+export function checkInAttendee(courseId: number, attendeeId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select({ id: courses.id })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    throw new Error('Course not found.')
+  }
+
+  const attendee = database
+    .select()
+    .from(enrollments)
+    .where(and(eq(enrollments.id, attendeeId), eq(enrollments.courseId, course.id)))
+    .get()
+
+  if (!attendee) {
+    throw new Error('Attendee not found.')
+  }
+
+  database
+    .update(enrollments)
+    .set({ status: 'Checked-in' })
+    .where(eq(enrollments.id, attendeeId))
+    .run()
+
+  return {
+    attendeeId,
+    status: 'Checked-in',
+  }
+}
+
+export function cancelAttendeeRegistration(courseId: number, attendeeId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select({ id: courses.id })
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    throw new Error('Course not found.')
+  }
+
+  const attendee = database
+    .select()
+    .from(enrollments)
+    .where(and(eq(enrollments.id, attendeeId), eq(enrollments.courseId, course.id)))
+    .get()
+
+  if (!attendee) {
+    throw new Error('Attendee not found.')
+  }
+
+  database.delete(enrollments).where(eq(enrollments.id, attendeeId)).run()
+
+  return {
+    attendeeId,
+  }
+}
+
 export function updateOrganizerCourse(
   courseId: number,
   input: OrganizerCourseInput,
