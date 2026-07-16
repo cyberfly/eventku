@@ -27,7 +27,7 @@ function Home() {
           <p className="eyebrow">Event Marketplace</p>
           <h2>Browse seminars, open the event, and purchase your seat.</h2>
           <p className="hero-copy">
-            Eventku is now positioned like an Eventbrite-style training marketplace:
+            Eventmu is now positioned like an Eventbrite-style training marketplace:
             visitors discover upcoming seminars, compare formats and pricing, and
             register from the event detail page.
           </p>

@@ -20,7 +20,7 @@ const courseSeed = [
     accent: '#0c7d69',
     price: 149,
     format: 'Virtual',
-    venue: 'Eventku Live Studio',
+    venue: 'Eventmu Live Studio',
     city: 'Streaming worldwide',
     audience: 'Support leads, training managers, and operations coordinators',
     heroNote: 'A live operating-systems seminar built for teams scaling service delivery.',
@@ -90,7 +90,7 @@ const courseSeed = [
     accent: '#1a4f8c',
     price: 179,
     format: 'Virtual',
-    venue: 'Eventku Broadcast Room',
+    venue: 'Eventmu Broadcast Room',
     city: 'Streaming worldwide',
     audience: 'Heads of learning, academy operators, and reporting owners',
     heroNote: 'A strategy-heavy workshop for teams that need better reporting and sharper executive visibility.',
@@ -229,9 +229,9 @@ const ticketMessageSeed = [
 function getDefaultOrganizerSeed() {
   return {
     email: normalizeEmail(
-      process.env.ORGANIZER_EMAIL ?? 'organizer@eventku.local',
+      process.env.ORGANIZER_EMAIL ?? 'organizer@eventmu.local',
     ),
-    name: process.env.ORGANIZER_NAME?.trim() || 'Eventku Organizer',
+    name: process.env.ORGANIZER_NAME?.trim() || 'Eventmu Organizer',
     password: process.env.ORGANIZER_PASSWORD ?? 'organizer123',
   }
 }

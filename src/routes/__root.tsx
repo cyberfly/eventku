@@ -17,11 +17,11 @@ export const Route = createRootRoute({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       {
-        title: 'Eventku',
+        title: 'Eventmu',
       },
       {
         name: 'description',
-        content: 'Eventku event marketplace built with TanStack Start, Drizzle, and SQLite.',
+        content: 'Eventmu event marketplace built with TanStack Start, Drizzle, and SQLite.',
       },
     ],
   }),

@@ -22,7 +22,7 @@ export const Route = createFileRoute('/organizer/login')({
 
 function OrganizerLoginPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('organizer@eventku.local')
+  const [email, setEmail] = useState('organizer@eventmu.local')
   const [password, setPassword] = useState('organizer123')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)

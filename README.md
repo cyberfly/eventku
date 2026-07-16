@@ -1,4 +1,4 @@
-# Eventku
+# Eventmu
 
 A TanStack Start starter project for an Eventbrite-style training marketplace. The app uses Drizzle ORM with SQLite and ships with seeded seminar and attendee data so the UI has meaningful content on first run.
 
@@ -32,7 +32,7 @@ The SQLite file is created at `data/lms.sqlite` by default.
 Default organizer credentials come from the environment:
 
 ```bash
-ORGANIZER_EMAIL=organizer@eventku.local
+ORGANIZER_EMAIL=organizer@eventmu.local
 ORGANIZER_PASSWORD=organizer123
 ```
 
