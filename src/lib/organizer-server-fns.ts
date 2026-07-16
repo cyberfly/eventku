@@ -1,7 +1,7 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
-import { organizerCourseInput, organizerLoginInput } from '@/lib/organizer'
+import { organizerCourseInput } from '@/lib/organizer'
 
 const courseIdInput = z.object({
   courseId: z.number().int().positive(),
@@ -16,24 +16,6 @@ export const getOrganizerSessionFn = createServerFn({ method: 'GET' }).handler(
     const { getOrganizerSession } = await import('@/server/organizer')
 
     return getOrganizerSession()
-  },
-)
-
-export const loginOrganizerFn = createServerFn({ method: 'POST' })
-  .inputValidator((input: z.infer<typeof organizerLoginInput>) =>
-    organizerLoginInput.parse(input),
-  )
-  .handler(async ({ data }) => {
-    const { loginOrganizer } = await import('@/server/organizer')
-
-    return loginOrganizer(data)
-  })
-
-export const logoutOrganizerFn = createServerFn({ method: 'POST' }).handler(
-  async () => {
-    const { logoutOrganizer } = await import('@/server/organizer')
-
-    return logoutOrganizer()
   },
 )
 

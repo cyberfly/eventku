@@ -2,10 +2,8 @@ import { useState } from 'react'
 
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
-import {
-  getOrganizerSessionFn,
-  loginOrganizerFn,
-} from '@/lib/organizer-server-fns'
+import { authClient } from '@/lib/auth-client'
+import { getOrganizerSessionFn } from '@/lib/organizer-server-fns'
 
 export const Route = createFileRoute('/organizer/login')({
   component: OrganizerLoginPage,
@@ -35,7 +33,7 @@ function OrganizerLoginPage() {
           <h3>Login to create and manage courses</h3>
         </div>
         <p className="muted-copy">
-          Organizer sessions are handled on the server with an HTTP-only cookie.
+          Organizer sessions are handled by Better Auth with an HTTP-only cookie.
           Update `ORGANIZER_EMAIL`, `ORGANIZER_NAME`, and `ORGANIZER_PASSWORD` in
           the environment to replace the default account.
         </p>
@@ -46,21 +44,19 @@ function OrganizerLoginPage() {
             setErrorMessage(null)
             setIsSubmitting(true)
 
-            try {
-              await loginOrganizerFn({
-                data: {
-                  email,
-                  password,
-                },
-              })
-              await navigate({ to: '/organizer' })
-            } catch (error) {
-              setErrorMessage(
-                error instanceof Error ? error.message : 'Unable to login.',
-              )
-            } finally {
+            const { error } = await authClient.signIn.email({
+              email,
+              password,
+            })
+
+            if (error) {
+              setErrorMessage(error.message ?? 'Unable to login.')
               setIsSubmitting(false)
+              return
             }
+
+            await navigate({ to: '/organizer' })
+            setIsSubmitting(false)
           }}
         >
           <label>

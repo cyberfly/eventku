@@ -1,9 +1,9 @@
 import { Link, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 
+import { authClient } from '@/lib/auth-client'
 import {
   getOrganizerDashboardFn,
   getOrganizerSessionFn,
-  logoutOrganizerFn,
 } from '@/lib/organizer-server-fns'
 import { MediaPlaceholder } from '@/components/media-placeholder'
 
@@ -42,7 +42,7 @@ function OrganizerDashboardPage() {
           <button
             className="ghost-button"
             onClick={async () => {
-              await logoutOrganizerFn()
+              await authClient.signOut()
               await navigate({ to: '/organizer/login' })
             }}
             type="button"

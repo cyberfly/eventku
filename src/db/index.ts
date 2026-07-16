@@ -7,7 +7,6 @@ import Database from 'better-sqlite3'
 import { drizzle } from 'drizzle-orm/better-sqlite3'
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator'
 
-import { ensureSeedData } from './seed'
 import * as schema from './schema'
 
 const databaseFile = resolve(
@@ -24,7 +23,7 @@ export const db = drizzle(sqlite, { schema })
 
 let isBootstrapped = false
 
-export function bootstrapDatabase() {
+export async function bootstrapDatabase() {
   if (isBootstrapped) {
     return db
   }
@@ -33,7 +32,9 @@ export function bootstrapDatabase() {
     migrationsFolder: resolve(process.cwd(), 'drizzle'),
   })
 
-  ensureSeedData(db)
+  const { ensureSeedData } = await import('./seed')
+
+  await ensureSeedData(db)
   isBootstrapped = true
 
   return db

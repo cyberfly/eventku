@@ -1,7 +1,7 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { eq, isNull } from 'drizzle-orm'
 
-import { hashPassword, normalizeEmail } from '@/lib/organizer-auth'
+import { auth } from '@/lib/auth'
 import * as schema from './schema'
 
 const courseSeed = [
@@ -228,23 +228,56 @@ const ticketMessageSeed = [
 
 function getDefaultOrganizerSeed() {
   return {
-    email: normalizeEmail(
-      process.env.ORGANIZER_EMAIL ?? 'organizer@eventku.local',
-    ),
+    email: (process.env.ORGANIZER_EMAIL ?? 'organizer@eventku.local')
+      .trim()
+      .toLowerCase(),
     name: process.env.ORGANIZER_NAME?.trim() || 'Eventku Organizer',
     password: process.env.ORGANIZER_PASSWORD ?? 'organizer123',
   }
 }
 
-function ensureDefaultOrganizer(
+async function ensureDefaultOrganizerAuthUser(
   db: BetterSQLite3Database<typeof schema>,
 ) {
   const defaults = getDefaultOrganizerSeed()
-  const passwordHash = hashPassword(defaults.password)
+  const existingUser = db
+    .select()
+    .from(schema.user)
+    .where(eq(schema.user.email, defaults.email))
+    .get()
+
+  if (existingUser) {
+    if (existingUser.name !== defaults.name) {
+      db
+        .update(schema.user)
+        .set({ name: defaults.name })
+        .where(eq(schema.user.id, existingUser.id))
+        .run()
+    }
+
+    return existingUser.id
+  }
+
+  const result = await auth.api.signUpEmail({
+    body: {
+      email: defaults.email,
+      name: defaults.name,
+      password: defaults.password,
+    },
+  })
+
+  return result.user.id
+}
+
+async function ensureDefaultOrganizer(
+  db: BetterSQLite3Database<typeof schema>,
+) {
+  const defaults = getDefaultOrganizerSeed()
+  const userId = await ensureDefaultOrganizerAuthUser(db)
   const exactOrganizer = db
     .select()
     .from(schema.organizers)
-    .where(eq(schema.organizers.email, defaults.email))
+    .where(eq(schema.organizers.userId, userId))
     .get()
   const existingOrganizer =
     exactOrganizer ??
@@ -260,9 +293,9 @@ function ensureDefaultOrganizer(
         db
           .insert(schema.organizers)
           .values({
+            userId,
             email: defaults.email,
             name: defaults.name,
-            passwordHash,
             createdAt: new Date().toISOString(),
           })
           .run().lastInsertRowid,
@@ -272,9 +305,9 @@ function ensureDefaultOrganizer(
     db
       .update(schema.organizers)
       .set({
+        userId,
         email: defaults.email,
         name: defaults.name,
-        passwordHash,
       })
       .where(eq(schema.organizers.id, organizerId))
       .run()
@@ -289,7 +322,7 @@ function ensureDefaultOrganizer(
     .run()
 }
 
-export function ensureSeedData(
+export async function ensureSeedData(
   db: BetterSQLite3Database<typeof schema>,
 ) {
   const existingCourses = db.select().from(schema.courses).limit(1).all()
@@ -302,10 +335,10 @@ export function ensureSeedData(
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
-      ensureDefaultOrganizer(tx)
     })
+    await ensureDefaultOrganizer(db)
     return
   }
 
-  ensureDefaultOrganizer(db)
+  await ensureDefaultOrganizer(db)
 }
