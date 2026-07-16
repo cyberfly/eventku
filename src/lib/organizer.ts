@@ -20,6 +20,13 @@ export const courseStatusOptions = [
   'published',
 ] as const
 
+export const enrollmentStatusOptions = [
+  'Active',
+  'At Risk',
+  'Completed',
+  'Confirmed',
+] as const
+
 export const courseFormatOptions = [
   'Virtual',
   'Hybrid',

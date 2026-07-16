@@ -58,3 +58,12 @@ export function formatPercent(value: number) {
 export function formatHours(value: number) {
   return `${value}h`
 }
+
+export function getInitials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+}
