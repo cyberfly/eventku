@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { eq, isNull } from 'drizzle-orm'
 
@@ -231,7 +229,6 @@ async function ensureDefaultOrganizer(
           .values({
             email: defaults.email,
             name: defaults.name,
-            passwordHash: randomUUID(), // placeholder; auth is handled by better-auth
             createdAt: new Date().toISOString(),
           })
           .run().lastInsertRowid,

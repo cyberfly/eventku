@@ -87,8 +87,8 @@ function toEventCard(
   }
 }
 
-export function getMarketplaceOverview() {
-  const database = bootstrapDatabase()
+export async function getMarketplaceOverview() {
+  const database = await bootstrapDatabase()
   const courseRows = database
     .select()
     .from(courses)
@@ -153,8 +153,8 @@ export function getMarketplaceOverview() {
   }
 }
 
-export function getEventCatalog() {
-  const database = bootstrapDatabase()
+export async function getEventCatalog() {
+  const database = await bootstrapDatabase()
   const courseRows = database
     .select()
     .from(courses)
@@ -181,8 +181,8 @@ export function getEventCatalog() {
     .sort((left, right) => new Date(left.startAt).getTime() - new Date(right.startAt).getTime())
 }
 
-export function getEventDetail(slug: string) {
-  const database = bootstrapDatabase()
+export async function getEventDetail(slug: string) {
+  const database = await bootstrapDatabase()
   const course = database
     .select()
     .from(courses)
@@ -247,8 +247,8 @@ type PurchaseEventInput = {
   slug: string
 }
 
-export function purchaseEventAccess(input: PurchaseEventInput) {
-  const database = bootstrapDatabase()
+export async function purchaseEventAccess(input: PurchaseEventInput) {
+  const database = await bootstrapDatabase()
   const course = database
     .select()
     .from(courses)

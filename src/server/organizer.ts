@@ -1,6 +1,5 @@
 import { and, eq, inArray } from 'drizzle-orm'
-import { getHeaders } from '@tanstack/react-start/server'
-import { appendResponseHeader } from 'vinxi/http'
+import { getRequestHeaders, setResponseHeader } from '@tanstack/react-start/server'
 
 import { auth } from '@/lib/auth'
 import { bootstrapDatabase } from '@/db'
@@ -31,13 +30,13 @@ function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
 }
 
 async function getOrganizerSessionRecord() {
-  const session = await auth.api.getSession({ headers: getHeaders() })
+  const session = await auth.api.getSession({ headers: getRequestHeaders() })
 
   if (!session) {
     return null
   }
 
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const organizer = database
     .select()
     .from(organizers)
@@ -65,11 +64,11 @@ async function requireOrganizerSession() {
   return organizer
 }
 
-function resolveUniqueSlug(
+async function resolveUniqueSlug(
   requestedSlug: string,
   excludedCourseId?: number,
 ) {
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const normalizedBaseSlug = requestedSlug.trim().toLowerCase()
   const matchingCourses = database
     .select({
@@ -122,7 +121,7 @@ export async function loginOrganizer(input: OrganizerLoginInput) {
     throw new Error('Invalid organizer email or password.')
   }
 
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const organizer = database
     .select()
     .from(organizers)
@@ -133,8 +132,10 @@ export async function loginOrganizer(input: OrganizerLoginInput) {
     throw new Error('Invalid organizer email or password.')
   }
 
-  for (const cookie of response.headers.getSetCookie()) {
-    appendResponseHeader('set-cookie', cookie)
+  const setCookieHeaders = response.headers.getSetCookie()
+
+  if (setCookieHeaders.length > 0) {
+    setResponseHeader('set-cookie', setCookieHeaders)
   }
 
   return {
@@ -148,12 +149,14 @@ export async function loginOrganizer(input: OrganizerLoginInput) {
 
 export async function logoutOrganizer() {
   const response = await auth.api.signOut({
-    headers: getHeaders(),
+    headers: getRequestHeaders(),
     asResponse: true,
   })
 
-  for (const cookie of response.headers.getSetCookie()) {
-    appendResponseHeader('set-cookie', cookie)
+  const setCookieHeaders = response.headers.getSetCookie()
+
+  if (setCookieHeaders.length > 0) {
+    setResponseHeader('set-cookie', setCookieHeaders)
   }
 
   return {
@@ -163,7 +166,7 @@ export async function logoutOrganizer() {
 
 export async function getOrganizerDashboard() {
   const organizer = await requireOrganizerSession()
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const organizerCourses = database
     .select()
     .from(courses)
@@ -253,8 +256,8 @@ export async function getOrganizerDashboard() {
 
 export async function createOrganizerCourse(input: OrganizerCourseInput) {
   const organizer = await requireOrganizerSession()
-  const database = bootstrapDatabase()
-  const slug = resolveUniqueSlug(input.slug)
+  const database = await bootstrapDatabase()
+  const slug = await resolveUniqueSlug(input.slug)
   const now = new Date().toISOString()
   const result = database
     .insert(courses)
@@ -283,7 +286,7 @@ export async function createOrganizerCourse(input: OrganizerCourseInput) {
 
 export async function getOrganizerCourseDetail(courseId: number) {
   const organizer = await requireOrganizerSession()
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const course = database
     .select()
     .from(courses)
@@ -343,7 +346,7 @@ export async function updateOrganizerCourse(
   input: OrganizerCourseInput,
 ) {
   const organizer = await requireOrganizerSession()
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const existingCourse = database
     .select({
       id: courses.id,
@@ -356,7 +359,7 @@ export async function updateOrganizerCourse(
     throw new Error('Course not found.')
   }
 
-  const slug = resolveUniqueSlug(input.slug, courseId)
+  const slug = await resolveUniqueSlug(input.slug, courseId)
 
   database
     .update(courses)
