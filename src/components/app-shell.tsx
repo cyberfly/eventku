@@ -5,6 +5,7 @@ function navItems() {
     { to: '/', label: 'Home' },
     { to: '/events', label: 'Events' },
     { to: '/organizer', label: 'Organizer' },
+    { to: '/organizer/attendees', label: 'Attendees' },
   ] as const
 }
 
