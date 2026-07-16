@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
-import { courses, enrollments, lessons, modules } from '@/db/schema'
+import { courses, enrollments, lessons, modules, orders } from '@/db/schema'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -286,7 +286,7 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     throw new Error('This attendee already has a confirmed registration.')
   }
 
-  const result = database
+  const enrollmentResult = database
     .insert(enrollments)
     .values({
       courseId: course.id,
@@ -298,7 +298,24 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     })
     .run()
 
+  const enrollmentId = Number(enrollmentResult.lastInsertRowid)
+  const orderNumber = `ORD-${String(enrollmentId).padStart(5, '0')}`
+
+  database
+    .insert(orders)
+    .values({
+      orderNumber,
+      courseId: course.id,
+      enrollmentId,
+      attendeeName: input.attendeeName.trim(),
+      attendeeEmail: normalizedEmail,
+      amount: course.price,
+      status: 'confirmed',
+      createdAt: new Date().toISOString(),
+    })
+    .run()
+
   return {
-    confirmationCode: `NS-${course.id}-${String(Number(result.lastInsertRowid)).padStart(4, '0')}`,
+    orderNumber,
   }
 }

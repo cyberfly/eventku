@@ -58,7 +58,7 @@ function EventDetailPage() {
   const router = useRouter()
   const [formState, setFormState] = useState(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [orderNumber, setOrderNumber] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
@@ -200,7 +200,7 @@ function EventDetailPage() {
               onSubmit={async (eventSubmit) => {
                 eventSubmit.preventDefault()
                 setErrorMessage(null)
-                setSuccessMessage(null)
+                setOrderNumber(null)
                 setIsSubmitting(true)
 
                 try {
@@ -213,7 +213,7 @@ function EventDetailPage() {
                   })
 
                   setFormState(initialFormState)
-                  setSuccessMessage(`Order confirmed. Reference ${result.confirmationCode}.`)
+                  setOrderNumber(result.orderNumber)
                   await router.invalidate()
                 } catch (error) {
                   setErrorMessage(
@@ -252,7 +252,14 @@ function EventDetailPage() {
                 />
               </label>
               {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-              {successMessage ? <p className="form-success">{successMessage}</p> : null}
+              {orderNumber ? (
+                <p className="form-success">
+                  Order confirmed. Reference {orderNumber}.{' '}
+                  <Link params={{ orderNumber }} to="/orders/$orderNumber">
+                    View order
+                  </Link>
+                </p>
+              ) : null}
               <button className="primary-button" disabled={isSubmitting || event.seatsRemaining === 0} type="submit">
                 {event.seatsRemaining === 0
                   ? 'Sold out'

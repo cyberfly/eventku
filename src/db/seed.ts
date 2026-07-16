@@ -154,6 +154,18 @@ const enrollmentSeed = [
   { id: 9, courseId: 3, learnerName: 'Grace Tan', learnerEmail: 'grace@example.com', status: 'Completed', progress: 100, enrolledAt: '2026-03-01T16:20:00.000Z' },
 ]
 
+const orderSeed = [
+  { id: 1, orderNumber: 'ORD-00001', courseId: 1, enrollmentId: 1, attendeeName: 'Jalen Brooks', attendeeEmail: 'jalen@example.com', amount: 149, status: 'confirmed', createdAt: '2026-03-10T08:00:00.000Z' },
+  { id: 2, orderNumber: 'ORD-00002', courseId: 1, enrollmentId: 2, attendeeName: 'Mia Ortega', attendeeEmail: 'mia@example.com', amount: 149, status: 'confirmed', createdAt: '2026-03-11T09:15:00.000Z' },
+  { id: 3, orderNumber: 'ORD-00003', courseId: 1, enrollmentId: 3, attendeeName: 'Samir Zain', attendeeEmail: 'samir@example.com', amount: 149, status: 'confirmed', createdAt: '2026-03-12T10:30:00.000Z' },
+  { id: 4, orderNumber: 'ORD-00004', courseId: 2, enrollmentId: 4, attendeeName: 'Nadia Lim', attendeeEmail: 'nadia@example.com', amount: 219, status: 'confirmed', createdAt: '2026-03-08T11:00:00.000Z' },
+  { id: 5, orderNumber: 'ORD-00005', courseId: 2, enrollmentId: 5, attendeeName: 'Victor Hale', attendeeEmail: 'victor@example.com', amount: 219, status: 'confirmed', createdAt: '2026-03-05T12:00:00.000Z' },
+  { id: 6, orderNumber: 'ORD-00006', courseId: 2, enrollmentId: 6, attendeeName: 'Sofia Martin', attendeeEmail: 'sofia@example.com', amount: 219, status: 'confirmed', createdAt: '2026-03-14T12:45:00.000Z' },
+  { id: 7, orderNumber: 'ORD-00007', courseId: 3, enrollmentId: 7, attendeeName: 'Alicia Wong', attendeeEmail: 'alicia@example.com', amount: 179, status: 'confirmed', createdAt: '2026-03-07T13:30:00.000Z' },
+  { id: 8, orderNumber: 'ORD-00008', courseId: 3, enrollmentId: 8, attendeeName: 'Peter Khan', attendeeEmail: 'peter@example.com', amount: 179, status: 'confirmed', createdAt: '2026-03-13T14:10:00.000Z' },
+  { id: 9, orderNumber: 'ORD-00009', courseId: 3, enrollmentId: 9, attendeeName: 'Grace Tan', attendeeEmail: 'grace@example.com', amount: 179, status: 'confirmed', createdAt: '2026-03-01T16:20:00.000Z' },
+]
+
 const ticketSeed = [
   {
     id: 1,
@@ -300,6 +312,7 @@ export function ensureSeedData(
       tx.insert(schema.modules).values(moduleSeed).run()
       tx.insert(schema.lessons).values(lessonSeed).run()
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
+      tx.insert(schema.orders).values(orderSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
       ensureDefaultOrganizer(tx)
