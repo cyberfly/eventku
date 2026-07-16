@@ -51,7 +51,7 @@ export const courses = sqliteTable(
     accent: text('accent').notNull(),
     price: integer('price').notNull().default(129),
     format: text('format').notNull().default('Virtual'),
-    venue: text('venue').notNull().default('Eventku Live'),
+    venue: text('venue').notNull().default('Eventmung Live'),
     city: text('city').notNull().default('Streaming worldwide'),
     audience: text('audience').notNull().default('Training teams and operators'),
     heroNote: text('hero_note').notNull().default('Live training event'),

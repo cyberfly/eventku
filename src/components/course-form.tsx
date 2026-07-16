@@ -446,7 +446,7 @@ export function CourseForm({
                   venue: event.target.value,
                 }))
               }
-              placeholder="Eventku Live Studio"
+              placeholder="Eventmung Live Studio"
               value={formState.venue}
             />
             {fieldError('venue')}

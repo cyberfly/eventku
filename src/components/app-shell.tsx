@@ -18,7 +18,7 @@ export function AppShell() {
       <header className="shell-header">
         <Link aria-label="Go to homepage" className="shell-brand" to="/">
           <p className="eyebrow">Live Events And Workshops</p>
-          <h1 className="shell-title">Eventku</h1>
+          <h1 className="shell-title">Eventmung</h1>
         </Link>
         <nav className="shell-nav" aria-label="Primary navigation">
           {navItems().map((item) => {
