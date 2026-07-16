@@ -154,6 +154,18 @@ const enrollmentSeed = [
   { id: 9, courseId: 3, learnerName: 'Grace Tan', learnerEmail: 'grace@example.com', status: 'Completed', progress: 100, enrolledAt: '2026-03-01T16:20:00.000Z' },
 ]
 
+const orderSeed = [
+  { id: 1, courseId: 1, enrollmentId: 1, confirmationCode: 'NS-1-0001', buyerName: 'Jalen Brooks', buyerEmail: 'jalen@example.com', amount: 149, status: 'paid', createdAt: '2026-03-10T08:00:00.000Z' },
+  { id: 2, courseId: 1, enrollmentId: 2, confirmationCode: 'NS-1-0002', buyerName: 'Mia Ortega', buyerEmail: 'mia@example.com', amount: 149, status: 'paid', createdAt: '2026-03-11T09:15:00.000Z' },
+  { id: 3, courseId: 1, enrollmentId: 3, confirmationCode: 'NS-1-0003', buyerName: 'Samir Zain', buyerEmail: 'samir@example.com', amount: 149, status: 'paid', createdAt: '2026-03-12T10:30:00.000Z' },
+  { id: 4, courseId: 2, enrollmentId: 4, confirmationCode: 'NS-2-0004', buyerName: 'Nadia Lim', buyerEmail: 'nadia@example.com', amount: 219, status: 'paid', createdAt: '2026-03-08T11:00:00.000Z' },
+  { id: 5, courseId: 2, enrollmentId: 5, confirmationCode: 'NS-2-0005', buyerName: 'Victor Hale', buyerEmail: 'victor@example.com', amount: 219, status: 'paid', createdAt: '2026-03-05T12:00:00.000Z' },
+  { id: 6, courseId: 2, enrollmentId: 6, confirmationCode: 'NS-2-0006', buyerName: 'Sofia Martin', buyerEmail: 'sofia@example.com', amount: 219, status: 'paid', createdAt: '2026-03-14T12:45:00.000Z' },
+  { id: 7, courseId: 3, enrollmentId: 7, confirmationCode: 'NS-3-0007', buyerName: 'Alicia Wong', buyerEmail: 'alicia@example.com', amount: 179, status: 'paid', createdAt: '2026-03-07T13:30:00.000Z' },
+  { id: 8, courseId: 3, enrollmentId: 8, confirmationCode: 'NS-3-0008', buyerName: 'Peter Khan', buyerEmail: 'peter@example.com', amount: 179, status: 'paid', createdAt: '2026-03-13T14:10:00.000Z' },
+  { id: 9, courseId: 3, enrollmentId: 9, confirmationCode: 'NS-3-0009', buyerName: 'Grace Tan', buyerEmail: 'grace@example.com', amount: 179, status: 'paid', createdAt: '2026-03-01T16:20:00.000Z' },
+]
+
 const ticketSeed = [
   {
     id: 1,
@@ -300,6 +312,7 @@ export function ensureSeedData(
       tx.insert(schema.modules).values(moduleSeed).run()
       tx.insert(schema.lessons).values(lessonSeed).run()
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
+      tx.insert(schema.orders).values(orderSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
       ensureDefaultOrganizer(tx)
