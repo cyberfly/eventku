@@ -17,6 +17,19 @@ import {
   updateOrganizerCourseFn,
 } from '@/lib/organizer-server-fns'
 
+function parseStringListOrFallback(value: string) {
+  try {
+    const parsed = JSON.parse(value)
+    const items = Array.isArray(parsed)
+      ? parsed.filter((item): item is string => typeof item === 'string')
+      : []
+
+    return items.length > 0 ? items : ['']
+  } catch {
+    return ['']
+  }
+}
+
 export const Route = createFileRoute('/organizer/courses/$courseId')({
   component: OrganizerCourseDetailPage,
   loader: async ({ params }) => {
@@ -59,6 +72,18 @@ function OrganizerCourseDetailPage() {
     status: data.course.status as OrganizerCourseInput['status'],
     summary: data.course.summary,
     title: data.course.title,
+    price: data.course.price,
+    format: data.course.format as OrganizerCourseInput['format'],
+    venue: data.course.venue,
+    city: data.course.city,
+    audience: data.course.audience,
+    heroNote: data.course.heroNote,
+    hostBio: data.course.hostBio,
+    startAt: data.course.startAt,
+    endAt: data.course.endAt,
+    highlights: parseStringListOrFallback(data.course.highlights),
+    takeaways: parseStringListOrFallback(data.course.takeaways),
+    featuredImage: data.course.featuredImage,
   }
 
   return (
@@ -76,6 +101,7 @@ function OrganizerCourseDetailPage() {
           <MediaPlaceholder
             accent={data.course.accent}
             eyebrow={data.course.category}
+            imageUrl={data.course.featuredImage}
             meta={data.course.status}
             title={data.course.title}
             variant="hero"

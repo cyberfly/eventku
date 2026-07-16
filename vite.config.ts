@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: 3000,
+    allowedHosts: ['unobliging-chronoscopic-terri.ngrok-free.dev'],
   },
   resolve: {
     tsconfigPaths: true,

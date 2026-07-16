@@ -74,6 +74,7 @@ function EventDetailPage() {
           <MediaPlaceholder
             accent={event.accent}
             eyebrow={event.format}
+            imageUrl={event.featuredImage}
             meta={`${event.city} • ${event.organizerName}`}
             title={event.title}
             variant="hero"
