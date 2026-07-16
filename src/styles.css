@@ -789,6 +789,12 @@ textarea {
   border-color: #a4322a;
 }
 
+.form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .form-section {
   display: grid;
   gap: 14px;
