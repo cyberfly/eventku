@@ -8,7 +8,8 @@
     "preview": "vite preview",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --import tsx src/db/run-migrations.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "test": "playwright test"
   },
   "dependencies": {
     "@tanstack/react-router": "latest",
@@ -22,6 +23,7 @@
     "zod": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/better-sqlite3": "latest",
     "@types/node": "latest",
     "@types/react": "latest",
