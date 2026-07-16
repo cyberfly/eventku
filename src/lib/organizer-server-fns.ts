@@ -1,7 +1,12 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
-import { organizerCourseInput, organizerLoginInput } from '@/lib/organizer'
+import {
+  organizerCourseInput,
+  organizerLoginInput,
+  removeAttendeeInput,
+  updateAttendeeStatusInput,
+} from '@/lib/organizer'
 
 const courseIdInput = z.object({
   courseId: z.number().int().positive(),
@@ -73,6 +78,36 @@ export const updateOrganizerCourseFn = createServerFn({ method: 'POST' })
     const { updateOrganizerCourse } = await import('@/server/organizer')
 
     return updateOrganizerCourse(data.courseId, data)
+  })
+
+export const getOrganizerCourseAttendeesFn = createServerFn({ method: 'GET' })
+  .inputValidator((input: z.infer<typeof courseIdInput>) =>
+    courseIdInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { getOrganizerCourseAttendees } = await import('@/server/organizer')
+
+    return getOrganizerCourseAttendees(data.courseId)
+  })
+
+export const updateAttendeeStatusFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof updateAttendeeStatusInput>) =>
+    updateAttendeeStatusInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { updateAttendeeStatus } = await import('@/server/organizer')
+
+    return updateAttendeeStatus(data)
+  })
+
+export const removeAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof removeAttendeeInput>) =>
+    removeAttendeeInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { removeAttendee } = await import('@/server/organizer')
+
+    return removeAttendee(data)
   })
 
 export const uploadCourseImageFn = createServerFn({ method: 'POST' })
