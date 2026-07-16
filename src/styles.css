@@ -756,7 +756,8 @@ textarea {
 }
 
 .booking-form label,
-.course-form label {
+.course-form label,
+.attendee-form label {
   display: grid;
   gap: 8px;
   font-weight: 700;
@@ -765,7 +766,9 @@ textarea {
 .booking-form input,
 .course-form input,
 .course-form select,
-.course-form textarea {
+.course-form textarea,
+.attendee-form input,
+.attendee-form select {
   width: 100%;
   border: 1px solid rgba(31, 37, 32, 0.15);
   border-radius: 16px;
@@ -774,7 +777,8 @@ textarea {
   color: var(--ink);
 }
 
-.course-form {
+.course-form,
+.attendee-form {
   display: grid;
   gap: 18px;
 }
@@ -785,8 +789,29 @@ textarea {
 
 .course-form input.has-error,
 .course-form select.has-error,
-.course-form textarea.has-error {
+.course-form textarea.has-error,
+.attendee-form input.has-error,
+.attendee-form select.has-error {
   border-color: #a4322a;
+}
+
+.attendee-form {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.attendee-form-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.enrollment-actions {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
 }
 
 .form-section {

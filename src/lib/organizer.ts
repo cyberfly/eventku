@@ -26,6 +26,12 @@ export const courseFormatOptions = [
   'In-person',
 ] as const
 
+export const attendeeStatusOptions = [
+  'Active',
+  'At Risk',
+  'Completed',
+] as const
+
 export const organizerLoginInput = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),
@@ -154,8 +160,30 @@ export const organizerCourseInput = z
     }
   })
 
+export const organizerAttendeeInput = z.object({
+  learnerName: z
+    .string()
+    .min(2, 'Name must be at least 2 characters.')
+    .max(120, 'Name must be 120 characters or fewer.'),
+  learnerEmail: z.string().email('Enter a valid email address.'),
+  status: z.enum(attendeeStatusOptions),
+  progress: z.coerce
+    .number('Enter a progress percentage.')
+    .int('Progress must be a whole number.')
+    .min(0, 'Progress cannot be negative.')
+    .max(100, 'Progress cannot exceed 100.'),
+})
+
 export type OrganizerLoginInput = z.infer<typeof organizerLoginInput>
 export type OrganizerCourseInput = z.infer<typeof organizerCourseInput>
+export type OrganizerAttendeeInput = z.infer<typeof organizerAttendeeInput>
+
+export const defaultAttendeeFormState: OrganizerAttendeeInput = {
+  learnerName: '',
+  learnerEmail: '',
+  status: attendeeStatusOptions[0],
+  progress: 0,
+}
 
 export const defaultCourseFormState: OrganizerCourseInput = {
   title: '',

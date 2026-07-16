@@ -1,7 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
-import { organizerCourseInput, organizerLoginInput } from '@/lib/organizer'
+import {
+  organizerAttendeeInput,
+  organizerCourseInput,
+  organizerLoginInput,
+} from '@/lib/organizer'
 
 const courseIdInput = z.object({
   courseId: z.number().int().positive(),
@@ -9,6 +13,20 @@ const courseIdInput = z.object({
 
 const updateOrganizerCourseInput = organizerCourseInput.extend({
   courseId: z.number().int().positive(),
+})
+
+const createOrganizerAttendeeInput = organizerAttendeeInput.extend({
+  courseId: z.number().int().positive(),
+})
+
+const updateOrganizerAttendeeInput = organizerAttendeeInput.extend({
+  courseId: z.number().int().positive(),
+  attendeeId: z.number().int().positive(),
+})
+
+const deleteOrganizerAttendeeInput = z.object({
+  courseId: z.number().int().positive(),
+  attendeeId: z.number().int().positive(),
 })
 
 export const getOrganizerSessionFn = createServerFn({ method: 'GET' }).handler(
@@ -73,6 +91,38 @@ export const updateOrganizerCourseFn = createServerFn({ method: 'POST' })
     const { updateOrganizerCourse } = await import('@/server/organizer')
 
     return updateOrganizerCourse(data.courseId, data)
+  })
+
+export const createOrganizerAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof createOrganizerAttendeeInput>) =>
+    createOrganizerAttendeeInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { createOrganizerAttendee } = await import('@/server/organizer')
+    const { courseId, ...input } = data
+
+    return createOrganizerAttendee(courseId, input)
+  })
+
+export const updateOrganizerAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof updateOrganizerAttendeeInput>) =>
+    updateOrganizerAttendeeInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { updateOrganizerAttendee } = await import('@/server/organizer')
+    const { courseId, attendeeId, ...input } = data
+
+    return updateOrganizerAttendee(courseId, attendeeId, input)
+  })
+
+export const deleteOrganizerAttendeeFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: z.infer<typeof deleteOrganizerAttendeeInput>) =>
+    deleteOrganizerAttendeeInput.parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { deleteOrganizerAttendee } = await import('@/server/organizer')
+
+    return deleteOrganizerAttendee(data.courseId, data.attendeeId)
   })
 
 export const uploadCourseImageFn = createServerFn({ method: 'POST' })
