@@ -4,6 +4,7 @@ function navItems() {
   return [
     { to: '/', label: 'Home' },
     { to: '/events', label: 'Events' },
+    { to: '/orders', label: 'My Orders' },
     { to: '/organizer', label: 'Organizer' },
   ] as const
 }

@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 import { useState } from 'react'
 
-import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
+import { Link, createFileRoute, notFound, useNavigate, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
 
@@ -56,9 +56,9 @@ const initialFormState = {
 function EventDetailPage() {
   const { agenda, attendeePreview, event } = Route.useLoaderData()
   const router = useRouter()
+  const navigate = useNavigate()
   const [formState, setFormState] = useState(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
@@ -200,7 +200,6 @@ function EventDetailPage() {
               onSubmit={async (eventSubmit) => {
                 eventSubmit.preventDefault()
                 setErrorMessage(null)
-                setSuccessMessage(null)
                 setIsSubmitting(true)
 
                 try {
@@ -212,9 +211,7 @@ function EventDetailPage() {
                     },
                   })
 
-                  setFormState(initialFormState)
-                  setSuccessMessage(`Order confirmed. Reference ${result.confirmationCode}.`)
-                  await router.invalidate()
+                  await navigate({ to: '/orders/$orderCode', params: { orderCode: result.orderNumber } })
                 } catch (error) {
                   setErrorMessage(
                     error instanceof Error ? error.message : 'Unable to complete the purchase.',
@@ -252,7 +249,6 @@ function EventDetailPage() {
                 />
               </label>
               {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-              {successMessage ? <p className="form-success">{successMessage}</p> : null}
               <button className="primary-button" disabled={isSubmitting || event.seatsRemaining === 0} type="submit">
                 {event.seatsRemaining === 0
                   ? 'Sold out'

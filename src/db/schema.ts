@@ -1,6 +1,24 @@
 import { relations } from 'drizzle-orm'
 import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 
+export const orders = sqliteTable(
+  'orders',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    orderNumber: text('order_number').notNull(),
+    enrollmentId: integer('enrollment_id').references(() => enrollments.id, { onDelete: 'set null' }),
+    courseId: integer('course_id').references(() => courses.id, { onDelete: 'set null' }),
+    attendeeName: text('attendee_name').notNull(),
+    attendeeEmail: text('attendee_email').notNull(),
+    priceAtPurchase: integer('price_at_purchase').notNull(),
+    status: text('status').notNull().default('confirmed'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => ({
+    orderNumberIndex: uniqueIndex('orders_order_number_idx').on(table.orderNumber),
+  }),
+)
+
 export const organizers = sqliteTable(
   'organizers',
   {
@@ -194,5 +212,16 @@ export const ticketMessagesRelations = relations(ticketMessages, ({ one }) => ({
   ticket: one(tickets, {
     fields: [ticketMessages.ticketId],
     references: [tickets.id],
+  }),
+}))
+
+export const ordersRelations = relations(orders, ({ one }) => ({
+  course: one(courses, {
+    fields: [orders.courseId],
+    references: [courses.id],
+  }),
+  enrollment: one(enrollments, {
+    fields: [orders.enrollmentId],
+    references: [enrollments.id],
   }),
 }))
