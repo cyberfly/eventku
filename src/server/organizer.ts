@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { and, eq, inArray, lt } from 'drizzle-orm'
+import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
 
 import { bootstrapDatabase } from '@/db'
@@ -11,6 +11,7 @@ import {
   enrollments,
   lessons,
   modules,
+  orders,
   organizers,
   organizerSessions,
 } from '@/db/schema'
@@ -260,6 +261,14 @@ export function getOrganizerDashboard() {
           .where(inArray(enrollments.courseId, courseIds))
           .all()
       : []
+  const orderRows =
+    courseIds.length > 0
+      ? database
+          .select()
+          .from(orders)
+          .where(inArray(orders.courseId, courseIds))
+          .all()
+      : []
 
   const moduleCountByCourse = countBy(moduleRows, (row) => row.courseId)
   const moduleIdToCourseId = new Map(
@@ -273,6 +282,19 @@ export function getOrganizerDashboard() {
     enrollmentRows,
     (row) => row.courseId,
   )
+  const orderCountByCourse = countBy(orderRows, (row) => row.courseId)
+  const revenueByCourse = new Map<number, number>()
+
+  for (const order of orderRows) {
+    if (order.courseId === null) {
+      continue
+    }
+
+    revenueByCourse.set(
+      order.courseId,
+      (revenueByCourse.get(order.courseId) ?? 0) + order.amount,
+    )
+  }
 
   return {
     courses: organizerCourses.map((course) => {
@@ -283,6 +305,8 @@ export function getOrganizerDashboard() {
         enrollmentCount,
         lessonCount: lessonCountByCourse.get(course.id) ?? 0,
         moduleCount: moduleCountByCourse.get(course.id) ?? 0,
+        orderCount: orderCountByCourse.get(course.id) ?? 0,
+        revenue: revenueByCourse.get(course.id) ?? 0,
         seatsRemaining: Math.max(course.seatCap - enrollmentCount, 0),
       }
     }),
@@ -304,10 +328,117 @@ export function getOrganizerDashboard() {
         ),
       },
       {
-        label: 'Enrollments',
-        value: String(enrollmentRows.length),
+        label: 'Orders',
+        value: String(orderRows.length),
+      },
+      {
+        label: 'Revenue',
+        value: `MYR ${orderRows.reduce((sum, order) => sum + order.amount, 0).toLocaleString('en-MY')}`,
       },
     ],
+    organizer,
+  }
+}
+
+export function getOrganizerOrders() {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const organizerCourses = database
+    .select({
+      id: courses.id,
+      slug: courses.slug,
+      title: courses.title,
+    })
+    .from(courses)
+    .where(eq(courses.organizerId, organizer.id))
+    .all()
+  const courseIds = organizerCourses.map((course) => course.id)
+
+  if (courseIds.length === 0) {
+    return {
+      metrics: [
+        { label: 'Orders', value: '0' },
+        { label: 'Revenue', value: 'MYR 0' },
+        { label: 'Confirmed', value: '0' },
+        { label: 'Pending review', value: '0' },
+      ],
+      orders: [],
+      organizer,
+    }
+  }
+
+  const courseById = new Map(organizerCourses.map((course) => [course.id, course]))
+  const orderRows = database
+    .select()
+    .from(orders)
+    .where(inArray(orders.courseId, courseIds))
+    .orderBy(desc(orders.createdAt))
+    .all()
+  const totalRevenue = orderRows.reduce((sum, order) => sum + order.amount, 0)
+
+  return {
+    metrics: [
+      { label: 'Orders', value: String(orderRows.length) },
+      { label: 'Revenue', value: `MYR ${totalRevenue.toLocaleString('en-MY')}` },
+      {
+        label: 'Confirmed',
+        value: String(orderRows.filter((order) => order.status === 'confirmed').length),
+      },
+      {
+        label: 'Pending review',
+        value: String(orderRows.filter((order) => order.status === 'review').length),
+      },
+    ],
+    orders: orderRows.map((order) => ({
+      ...order,
+      course: order.courseId === null ? null : courseById.get(order.courseId) ?? null,
+    })),
+    organizer,
+  }
+}
+
+export function getOrganizerOrderDetail(orderId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const order = database
+    .select({
+      amount: orders.amount,
+      attendeeEmail: orders.attendeeEmail,
+      attendeeName: orders.attendeeName,
+      courseId: orders.courseId,
+      courseSlug: courses.slug,
+      courseTitle: courses.title,
+      createdAt: orders.createdAt,
+      currency: orders.currency,
+      enrollmentId: orders.enrollmentId,
+      id: orders.id,
+      orderNumber: orders.orderNumber,
+      organizerId: courses.organizerId,
+      paymentStatus: orders.paymentStatus,
+      status: orders.status,
+      updatedAt: orders.updatedAt,
+    })
+    .from(orders)
+    .innerJoin(courses, eq(orders.courseId, courses.id))
+    .where(and(eq(orders.id, orderId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!order) {
+    return null
+  }
+
+  const enrollment =
+    order.enrollmentId === null
+      ? null
+      : database
+          .select()
+          .from(enrollments)
+          .where(eq(enrollments.id, order.enrollmentId))
+          .get() ?? null
+
+  return {
+    enrollment,
+    order,
     organizer,
   }
 }

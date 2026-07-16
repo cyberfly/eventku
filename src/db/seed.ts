@@ -154,6 +154,25 @@ const enrollmentSeed = [
   { id: 9, courseId: 3, learnerName: 'Grace Tan', learnerEmail: 'grace@example.com', status: 'Completed', progress: 100, enrolledAt: '2026-03-01T16:20:00.000Z' },
 ]
 
+const orderSeed = enrollmentSeed.map((enrollment) => {
+  const course = courseSeed.find((item) => item.id === enrollment.courseId)
+
+  return {
+    id: enrollment.id,
+    orderNumber: `ORD-2026-${String(enrollment.id).padStart(4, '0')}`,
+    courseId: enrollment.courseId,
+    enrollmentId: enrollment.id,
+    attendeeName: enrollment.learnerName,
+    attendeeEmail: enrollment.learnerEmail,
+    amount: course?.price ?? 0,
+    currency: 'MYR',
+    status: 'confirmed',
+    paymentStatus: 'paid',
+    createdAt: enrollment.enrolledAt,
+    updatedAt: enrollment.enrolledAt,
+  }
+})
+
 const ticketSeed = [
   {
     id: 1,
@@ -289,6 +308,50 @@ function ensureDefaultOrganizer(
     .run()
 }
 
+function ensureOrdersForExistingEnrollments(
+  db: BetterSQLite3Database<typeof schema>,
+) {
+  const enrollmentRows = db.select().from(schema.enrollments).all()
+  const existingOrders = db.select().from(schema.orders).all()
+  const enrollmentIdsWithOrders = new Set(
+    existingOrders
+      .map((order) => order.enrollmentId)
+      .filter((id): id is number => id !== null),
+  )
+
+  if (enrollmentRows.length === 0) {
+    return
+  }
+
+  const courseRows = db.select().from(schema.courses).all()
+  const coursesById = new Map(courseRows.map((course) => [course.id, course]))
+  const nextOrderOffset = existingOrders.length
+
+  enrollmentRows
+    .filter((enrollment) => !enrollmentIdsWithOrders.has(enrollment.id))
+    .forEach((enrollment, index) => {
+      const course = coursesById.get(enrollment.courseId)
+      const createdAt = enrollment.enrolledAt
+      const orderSequence = nextOrderOffset + index + 1
+
+      db.insert(schema.orders)
+        .values({
+          orderNumber: `ORD-2026-${String(orderSequence).padStart(4, '0')}`,
+          courseId: enrollment.courseId,
+          enrollmentId: enrollment.id,
+          attendeeName: enrollment.learnerName,
+          attendeeEmail: enrollment.learnerEmail,
+          amount: course?.price ?? 0,
+          currency: 'MYR',
+          status: enrollment.status === 'At Risk' ? 'review' : 'confirmed',
+          paymentStatus: 'paid',
+          createdAt,
+          updatedAt: createdAt,
+        })
+        .run()
+    })
+}
+
 export function ensureSeedData(
   db: BetterSQLite3Database<typeof schema>,
 ) {
@@ -300,6 +363,7 @@ export function ensureSeedData(
       tx.insert(schema.modules).values(moduleSeed).run()
       tx.insert(schema.lessons).values(lessonSeed).run()
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
+      tx.insert(schema.orders).values(orderSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
       ensureDefaultOrganizer(tx)
@@ -308,4 +372,5 @@ export function ensureSeedData(
   }
 
   ensureDefaultOrganizer(db)
+  ensureOrdersForExistingEnrollments(db)
 }

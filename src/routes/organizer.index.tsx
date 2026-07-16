@@ -6,6 +6,7 @@ import {
   logoutOrganizerFn,
 } from '@/lib/organizer-server-fns'
 import { MediaPlaceholder } from '@/components/media-placeholder'
+import { formatCurrency } from '@/lib/format'
 
 export const Route = createFileRoute('/organizer/')({
   component: OrganizerDashboardPage,
@@ -38,6 +39,9 @@ function OrganizerDashboardPage() {
         <div className="hero-actions">
           <Link className="primary-link" to="/organizer/new">
             Create course
+          </Link>
+          <Link className="ghost-link" to="/organizer/orders">
+            View orders
           </Link>
           <button
             className="ghost-button"
@@ -95,12 +99,12 @@ function OrganizerDashboardPage() {
                 <div className="organizer-course-side">
                   <dl className="support-meta organizer-course-meta">
                     <div>
-                      <dt>Enrollments</dt>
-                      <dd>{course.enrollmentCount}</dd>
+                      <dt>Orders</dt>
+                      <dd>{course.orderCount}</dd>
                     </div>
                     <div>
-                      <dt>Modules</dt>
-                      <dd>{course.moduleCount}</dd>
+                      <dt>Revenue</dt>
+                      <dd>{formatCurrency(course.revenue)}</dd>
                     </div>
                     <div>
                       <dt>Seats left</dt>
