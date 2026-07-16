@@ -8,12 +8,17 @@ import {
   useRouter,
 } from '@tanstack/react-router'
 
+import { AttendeeForm } from '@/components/attendee-form'
 import { CourseForm } from '@/components/course-form'
 import { MediaPlaceholder } from '@/components/media-placeholder'
-import type { OrganizerCourseInput } from '@/lib/organizer'
+import type { OrganizerAttendeeInput, OrganizerCourseInput } from '@/lib/organizer'
+import { defaultAttendeeFormState } from '@/lib/organizer'
 import {
+  createOrganizerAttendeeFn,
+  deleteOrganizerAttendeeFn,
   getOrganizerCourseDetailFn,
   getOrganizerSessionFn,
+  updateOrganizerAttendeeFn,
   updateOrganizerCourseFn,
 } from '@/lib/organizer-server-fns'
 
@@ -59,6 +64,11 @@ function OrganizerCourseDetailPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAddingAttendee, setIsAddingAttendee] = useState(false)
+  const [editingAttendeeId, setEditingAttendeeId] = useState<number | null>(null)
+  const [removingAttendeeId, setRemovingAttendeeId] = useState<number | null>(null)
+  const [isAttendeeSubmitting, setIsAttendeeSubmitting] = useState(false)
+  const [attendeeError, setAttendeeError] = useState<string | null>(null)
 
   const initialValues: OrganizerCourseInput = {
     accent: data.course.accent,
@@ -225,25 +235,161 @@ function OrganizerCourseDetailPage() {
 
           <section className="panel">
             <div className="section-intro">
-              <p className="eyebrow">Enrollments</p>
-              <h3>Recent learners</h3>
+              <p className="eyebrow">Attendees</p>
+              <h3>Manage attendees</h3>
+              <p className="muted-copy">
+                {data.stats.seatsRemaining} of {data.course.seatCap} seats remaining.
+              </p>
             </div>
+
+            {isAddingAttendee ? (
+              <AttendeeForm
+                errorMessage={attendeeError}
+                initialValues={defaultAttendeeFormState}
+                isSubmitting={isAttendeeSubmitting}
+                onCancel={() => {
+                  setIsAddingAttendee(false)
+                  setAttendeeError(null)
+                }}
+                onSubmit={async (values) => {
+                  setAttendeeError(null)
+                  setIsAttendeeSubmitting(true)
+
+                  try {
+                    await createOrganizerAttendeeFn({
+                      data: { courseId: data.course.id, ...values },
+                    })
+                    setIsAddingAttendee(false)
+                    await router.invalidate()
+                  } catch (error) {
+                    setAttendeeError(
+                      error instanceof Error ? error.message : 'Unable to add attendee.',
+                    )
+                  } finally {
+                    setIsAttendeeSubmitting(false)
+                  }
+                }}
+                submitLabel="Add attendee"
+                submittingLabel="Adding..."
+              />
+            ) : (
+              <button
+                className="ghost-button"
+                disabled={data.stats.seatsRemaining <= 0}
+                onClick={() => {
+                  setAttendeeError(null)
+                  setIsAddingAttendee(true)
+                }}
+                type="button"
+              >
+                {data.stats.seatsRemaining <= 0 ? 'Event is full' : 'Add attendee'}
+              </button>
+            )}
+
             {data.enrollments.length === 0 ? (
-              <p className="muted-copy">No learners enrolled yet.</p>
+              <p className="muted-copy">No attendees registered yet.</p>
             ) : (
               <div className="enrollment-list">
-                {data.enrollments.map((enrollment) => (
-                  <article className="enrollment-row" key={enrollment.id}>
-                    <div>
-                      <h4>{enrollment.learnerName}</h4>
-                      <p className="muted-copy">{enrollment.learnerEmail}</p>
-                    </div>
-                    <div className="enrollment-progress">
-                      <strong>{enrollment.progress}%</strong>
-                      <span className="muted-copy">{enrollment.status}</span>
-                    </div>
-                  </article>
-                ))}
+                {data.enrollments.map((enrollment) => {
+                  if (editingAttendeeId === enrollment.id) {
+                    const initialValues: OrganizerAttendeeInput = {
+                      learnerName: enrollment.learnerName,
+                      learnerEmail: enrollment.learnerEmail,
+                      status: enrollment.status as OrganizerAttendeeInput['status'],
+                      progress: enrollment.progress,
+                    }
+
+                    return (
+                      <AttendeeForm
+                        errorMessage={attendeeError}
+                        initialValues={initialValues}
+                        isSubmitting={isAttendeeSubmitting}
+                        key={enrollment.id}
+                        onCancel={() => {
+                          setEditingAttendeeId(null)
+                          setAttendeeError(null)
+                        }}
+                        onSubmit={async (values) => {
+                          setAttendeeError(null)
+                          setIsAttendeeSubmitting(true)
+
+                          try {
+                            await updateOrganizerAttendeeFn({
+                              data: {
+                                courseId: data.course.id,
+                                attendeeId: enrollment.id,
+                                ...values,
+                              },
+                            })
+                            setEditingAttendeeId(null)
+                            await router.invalidate()
+                          } catch (error) {
+                            setAttendeeError(
+                              error instanceof Error
+                                ? error.message
+                                : 'Unable to update attendee.',
+                            )
+                          } finally {
+                            setIsAttendeeSubmitting(false)
+                          }
+                        }}
+                        submitLabel="Save attendee"
+                        submittingLabel="Saving..."
+                      />
+                    )
+                  }
+
+                  return (
+                    <article className="enrollment-row" key={enrollment.id}>
+                      <div>
+                        <h4>{enrollment.learnerName}</h4>
+                        <p className="muted-copy">{enrollment.learnerEmail}</p>
+                      </div>
+                      <div className="enrollment-progress">
+                        <strong>{enrollment.progress}%</strong>
+                        <span className="muted-copy">{enrollment.status}</span>
+                      </div>
+                      <div className="enrollment-actions">
+                        <button
+                          className="ghost-button"
+                          onClick={() => {
+                            setAttendeeError(null)
+                            setEditingAttendeeId(enrollment.id)
+                          }}
+                          type="button"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="ghost-button"
+                          disabled={removingAttendeeId === enrollment.id}
+                          onClick={async () => {
+                            setAttendeeError(null)
+                            setRemovingAttendeeId(enrollment.id)
+
+                            try {
+                              await deleteOrganizerAttendeeFn({
+                                data: { courseId: data.course.id, attendeeId: enrollment.id },
+                              })
+                              await router.invalidate()
+                            } catch (error) {
+                              setAttendeeError(
+                                error instanceof Error
+                                  ? error.message
+                                  : 'Unable to remove attendee.',
+                              )
+                            } finally {
+                              setRemovingAttendeeId(null)
+                            }
+                          }}
+                          type="button"
+                        >
+                          {removingAttendeeId === enrollment.id ? 'Removing...' : 'Remove'}
+                        </button>
+                      </div>
+                    </article>
+                  )
+                })}
               </div>
             )}
           </section>

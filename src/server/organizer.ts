@@ -14,7 +14,11 @@ import {
   organizers,
   organizerSessions,
 } from '@/db/schema'
-import type { OrganizerCourseInput, OrganizerLoginInput } from '@/lib/organizer'
+import type {
+  OrganizerAttendeeInput,
+  OrganizerCourseInput,
+  OrganizerLoginInput,
+} from '@/lib/organizer'
 import { createSessionToken, normalizeEmail, verifyPassword } from '@/lib/organizer-auth'
 
 const SESSION_COOKIE_NAME = 'organizer_session'
@@ -119,6 +123,22 @@ function requireOrganizerSession() {
   }
 
   return organizer
+}
+
+function requireOwnedCourse(courseId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select()
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    throw new Error('Event not found.')
+  }
+
+  return { course, database }
 }
 
 function resolveUniqueSlug(
@@ -465,6 +485,86 @@ export function updateOrganizerCourse(
     courseId,
     slug,
   }
+}
+
+export function createOrganizerAttendee(
+  courseId: number,
+  input: OrganizerAttendeeInput,
+) {
+  const { course, database } = requireOwnedCourse(courseId)
+
+  const enrollmentCount = database
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(eq(enrollments.courseId, courseId))
+    .all().length
+
+  if (enrollmentCount >= course.seatCap) {
+    throw new Error('No seats remaining for this event.')
+  }
+
+  const result = database
+    .insert(enrollments)
+    .values({
+      courseId,
+      learnerName: input.learnerName.trim(),
+      learnerEmail: input.learnerEmail.trim().toLowerCase(),
+      status: input.status,
+      progress: input.progress,
+      enrolledAt: new Date().toISOString(),
+    })
+    .run()
+
+  return {
+    attendeeId: Number(result.lastInsertRowid),
+  }
+}
+
+export function updateOrganizerAttendee(
+  courseId: number,
+  attendeeId: number,
+  input: OrganizerAttendeeInput,
+) {
+  const { database } = requireOwnedCourse(courseId)
+  const existingAttendee = database
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(and(eq(enrollments.id, attendeeId), eq(enrollments.courseId, courseId)))
+    .get()
+
+  if (!existingAttendee) {
+    throw new Error('Attendee not found.')
+  }
+
+  database
+    .update(enrollments)
+    .set({
+      learnerName: input.learnerName.trim(),
+      learnerEmail: input.learnerEmail.trim().toLowerCase(),
+      status: input.status,
+      progress: input.progress,
+    })
+    .where(eq(enrollments.id, attendeeId))
+    .run()
+
+  return { attendeeId }
+}
+
+export function deleteOrganizerAttendee(courseId: number, attendeeId: number) {
+  const { database } = requireOwnedCourse(courseId)
+  const existingAttendee = database
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(and(eq(enrollments.id, attendeeId), eq(enrollments.courseId, courseId)))
+    .get()
+
+  if (!existingAttendee) {
+    throw new Error('Attendee not found.')
+  }
+
+  database.delete(enrollments).where(eq(enrollments.id, attendeeId)).run()
+
+  return { attendeeId }
 }
 
 export async function uploadCourseImage(formData: FormData) {
