@@ -972,6 +972,132 @@ textarea {
   margin-top: 18px;
 }
 
+.attendee-filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.attendee-search {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+}
+
+.attendee-status-select {
+  border: 1px solid rgba(31, 37, 32, 0.15);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.attendee-empty {
+  margin: 20px 0 0;
+}
+
+.attendee-list {
+  display: grid;
+}
+
+.attendee-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 18px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.attendee-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.attendee-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--attendee-accent, var(--green)) 72%, white),
+    color-mix(in srgb, var(--attendee-accent, var(--green)) 38%, #1f2520)
+  );
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.attendee-info h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.attendee-progress-col {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 140px;
+}
+
+.attendee-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(31, 37, 32, 0.1);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.attendee-progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 999px;
+  transition: width 300ms ease;
+}
+
+.attendee-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.attendee-date {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.attendee-status.status-active {
+  background: rgba(12, 125, 105, 0.12);
+  color: var(--green);
+}
+
+.attendee-status.status-at-risk {
+  background: rgba(207, 108, 43, 0.12);
+  color: var(--orange);
+}
+
+.attendee-status.status-completed {
+  background: rgba(29, 79, 143, 0.12);
+  color: var(--blue);
+}
+
+.attendee-status.status-confirmed {
+  background: rgba(31, 37, 32, 0.08);
+  color: var(--muted);
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -1016,6 +1142,7 @@ textarea {
   .event-card-head,
   .lesson-list li,
   .enrollment-row,
+  .attendee-row,
   .booking-price-row {
     grid-template-columns: 1fr;
     flex-direction: column;
