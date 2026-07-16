@@ -26,6 +26,12 @@ export const courseFormatOptions = [
   'In-person',
 ] as const
 
+export const enrollmentStatusOptions = [
+  'Active',
+  'At Risk',
+  'Completed',
+] as const
+
 export const organizerLoginInput = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(128),

@@ -411,6 +411,42 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
+export function getOrganizerCourseAttendees(courseId: number) {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const course = database
+    .select()
+    .from(courses)
+    .where(and(eq(courses.id, courseId), eq(courses.organizerId, organizer.id)))
+    .get()
+
+  if (!course) {
+    return null
+  }
+
+  const attendeeRows = database
+    .select()
+    .from(enrollments)
+    .where(eq(enrollments.courseId, course.id))
+    .all()
+    .sort(
+      (left, right) =>
+        new Date(right.enrolledAt).getTime() - new Date(left.enrolledAt).getTime(),
+    )
+
+  return {
+    attendees: attendeeRows,
+    course,
+    organizer,
+    stats: {
+      active: attendeeRows.filter((row) => row.status === 'Active').length,
+      atRisk: attendeeRows.filter((row) => row.status === 'At Risk').length,
+      completed: attendeeRows.filter((row) => row.status === 'Completed').length,
+      total: attendeeRows.length,
+    },
+  }
+}
+
 export function updateOrganizerCourse(
   courseId: number,
   input: OrganizerCourseInput,
