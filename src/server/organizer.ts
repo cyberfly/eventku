@@ -111,7 +111,7 @@ function getOrganizerSessionRecord() {
   }
 }
 
-function requireOrganizerSession() {
+export function requireOrganizerSession() {
   const organizer = getOrganizerSessionRecord()
 
   if (!organizer) {

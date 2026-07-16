@@ -4,10 +4,10 @@ import { useState } from 'react'
 
 import { Link, createFileRoute, notFound, useRouter } from '@tanstack/react-router'
 import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
 
 import { MediaPlaceholder } from '@/components/media-placeholder'
 import { formatCurrency, formatEventDateTime, formatHours } from '@/lib/format'
+import { createOrderFn } from '@/lib/orders-server-fns'
 
 const getEventDetail = createServerFn({ method: 'GET' })
   .inputValidator((input: { slug: string }) => input)
@@ -15,20 +15,6 @@ const getEventDetail = createServerFn({ method: 'GET' })
     const { getEventDetail } = await import('@/server/lms')
 
     return getEventDetail(data.slug)
-  })
-
-const purchaseEventInput = z.object({
-  attendeeEmail: z.string().email(),
-  attendeeName: z.string().min(2).max(80),
-  slug: z.string().min(1),
-})
-
-const purchaseEventAccess = createServerFn({ method: 'POST' })
-  .inputValidator((input: z.infer<typeof purchaseEventInput>) => purchaseEventInput.parse(input))
-  .handler(async ({ data }) => {
-    const { purchaseEventAccess } = await import('@/server/lms')
-
-    return purchaseEventAccess(data)
   })
 
 export const Route = createFileRoute('/events/$eventSlug')({
@@ -49,8 +35,8 @@ export const Route = createFileRoute('/events/$eventSlug')({
 })
 
 const initialFormState = {
-  attendeeEmail: '',
-  attendeeName: '',
+  buyerEmail: '',
+  buyerName: '',
 }
 
 function EventDetailPage() {
@@ -58,7 +44,7 @@ function EventDetailPage() {
   const router = useRouter()
   const [formState, setFormState] = useState(initialFormState)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [confirmationCode, setConfirmationCode] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   return (
@@ -200,20 +186,20 @@ function EventDetailPage() {
               onSubmit={async (eventSubmit) => {
                 eventSubmit.preventDefault()
                 setErrorMessage(null)
-                setSuccessMessage(null)
+                setConfirmationCode(null)
                 setIsSubmitting(true)
 
                 try {
-                  const result = await purchaseEventAccess({
+                  const result = await createOrderFn({
                     data: {
-                      attendeeEmail: formState.attendeeEmail,
-                      attendeeName: formState.attendeeName,
+                      buyerEmail: formState.buyerEmail,
+                      buyerName: formState.buyerName,
                       slug: event.slug,
                     },
                   })
 
                   setFormState(initialFormState)
-                  setSuccessMessage(`Order confirmed. Reference ${result.confirmationCode}.`)
+                  setConfirmationCode(result.confirmationCode)
                   await router.invalidate()
                 } catch (error) {
                   setErrorMessage(
@@ -230,11 +216,11 @@ function EventDetailPage() {
                   onChange={(eventInput) =>
                     setFormState((current) => ({
                       ...current,
-                      attendeeName: eventInput.target.value,
+                      buyerName: eventInput.target.value,
                     }))
                   }
                   placeholder="Who is attending?"
-                  value={formState.attendeeName}
+                  value={formState.buyerName}
                 />
               </label>
               <label>
@@ -243,16 +229,24 @@ function EventDetailPage() {
                   onChange={(eventInput) =>
                     setFormState((current) => ({
                       ...current,
-                      attendeeEmail: eventInput.target.value,
+                      buyerEmail: eventInput.target.value,
                     }))
                   }
                   placeholder="name@example.com"
                   type="email"
-                  value={formState.attendeeEmail}
+                  value={formState.buyerEmail}
                 />
               </label>
               {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
-              {successMessage ? <p className="form-success">{successMessage}</p> : null}
+              {confirmationCode ? (
+                <p className="form-success">
+                  Order confirmed. Reference{' '}
+                  <Link params={{ confirmationCode }} to="/orders/$confirmationCode">
+                    {confirmationCode}
+                  </Link>
+                  .
+                </p>
+              ) : null}
               <button className="primary-button" disabled={isSubmitting || event.seatsRemaining === 0} type="submit">
                 {event.seatsRemaining === 0
                   ? 'Sold out'
