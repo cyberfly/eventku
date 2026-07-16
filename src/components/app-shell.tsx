@@ -3,7 +3,7 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 function navItems() {
   return [
     { to: '/', label: 'Home' },
-    { to: '/events', label: 'Events' },
+    { to: '/events', label: 'Event Saya' },
     { to: '/organizer', label: 'Organizer' },
   ] as const
 }
