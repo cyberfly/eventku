@@ -507,6 +507,46 @@ textarea {
   overflow: hidden;
 }
 
+.faq-list {
+  padding: 0;
+  overflow: hidden;
+}
+
+.faq-item {
+  padding: 22px 28px;
+  border-top: 1px solid var(--line);
+}
+
+.faq-item:first-child {
+  border-top: none;
+}
+
+.faq-question {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faq-question::-webkit-details-marker {
+  display: none;
+}
+
+.faq-question::before {
+  content: '+';
+  display: inline-block;
+  width: 1.2em;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.faq-item[open] .faq-question::before {
+  content: '−';
+}
+
+.faq-answer {
+  margin: 12px 0 0 1.2em;
+}
+
 .support-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
