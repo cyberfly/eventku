@@ -9,7 +9,7 @@ import {
   getOrganizerSessionFn,
 } from '@/lib/organizer-server-fns'
 
-export const Route = createFileRoute('/organizer/courses/$courseId/attendees')({
+export const Route = createFileRoute('/organizer/courses/$courseId_/attendees')({
   component: OrganizerCourseAttendeesPage,
   loader: async ({ params }) => {
     const session = await getOrganizerSessionFn()
