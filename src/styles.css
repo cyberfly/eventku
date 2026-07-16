@@ -932,6 +932,19 @@ textarea {
   min-width: 220px;
 }
 
+.order-avatar {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  color: white;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .form-split-3 {
   display: grid;
   gap: 16px;
