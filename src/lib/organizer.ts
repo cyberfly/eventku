@@ -26,11 +26,6 @@ export const courseFormatOptions = [
   'In-person',
 ] as const
 
-export const organizerLoginInput = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).max(128),
-})
-
 export const organizerCourseInput = z
   .object({
     title: z
@@ -154,7 +149,6 @@ export const organizerCourseInput = z
     }
   })
 
-export type OrganizerLoginInput = z.infer<typeof organizerLoginInput>
 export type OrganizerCourseInput = z.infer<typeof organizerCourseInput>
 
 export const defaultCourseFormState: OrganizerCourseInput = {

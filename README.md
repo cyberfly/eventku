@@ -8,6 +8,7 @@ A TanStack Start starter project for an Eventbrite-style training marketplace. T
 - React 19
 - Drizzle ORM
 - SQLite via `better-sqlite3`
+- Better Auth for organizer authentication
 - Zod for purchase form validation
 
 ## What is included
@@ -15,7 +16,7 @@ A TanStack Start starter project for an Eventbrite-style training marketplace. T
 - Marketplace landing page with booking KPIs
 - Event listing and event detail pages
 - Purchase flow that creates attendee registrations
-- Organizer backend for login, course creation, and course management
+- Organizer backend for login, course creation, and course management, authenticated with Better Auth (email/password)
 - Drizzle schema, generated migration, and automatic seed bootstrap
 
 ## Run locally
@@ -36,7 +37,9 @@ ORGANIZER_EMAIL=organizer@eventku.local
 ORGANIZER_PASSWORD=organizer123
 ```
 
-You can replace these values in `.env` before running the app.
+You can replace these values in `.env` before running the app. Organizer sessions are
+handled by [Better Auth](https://www.better-auth.com/), which needs a `BETTER_AUTH_SECRET`
+(any long random string) set in `.env` — see `.env.example`.
 
 ## Useful commands
 

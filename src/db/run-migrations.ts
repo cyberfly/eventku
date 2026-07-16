@@ -1,5 +1,5 @@
 import { bootstrapDatabase } from './index'
 
-bootstrapDatabase()
+await bootstrapDatabase()
 
 console.log('Database ready.')

@@ -2,22 +2,14 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { and, eq, inArray, lt } from 'drizzle-orm'
-import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
+import { and, eq, inArray } from 'drizzle-orm'
+import { getRequest } from '@tanstack/react-start/server'
 
 import { bootstrapDatabase } from '@/db'
-import {
-  courses,
-  enrollments,
-  lessons,
-  modules,
-  organizers,
-  organizerSessions,
-} from '@/db/schema'
-import type { OrganizerCourseInput, OrganizerLoginInput } from '@/lib/organizer'
-import { createSessionToken, normalizeEmail, verifyPassword } from '@/lib/organizer-auth'
+import { courses, enrollments, lessons, modules, organizers } from '@/db/schema'
+import { auth } from '@/lib/auth'
+import type { OrganizerCourseInput } from '@/lib/organizer'
 
-const SESSION_COOKIE_NAME = 'organizer_session'
 const COURSE_IMAGE_DIR = resolve(process.cwd(), 'public/uploads/courses')
 const COURSE_IMAGE_EXTENSION_BY_TYPE: Record<string, string> = {
   'image/gif': 'gif',
@@ -26,17 +18,6 @@ const COURSE_IMAGE_EXTENSION_BY_TYPE: Record<string, string> = {
   'image/webp': 'webp',
 }
 const MAX_COURSE_IMAGE_BYTES = 5 * 1024 * 1024
-const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7
-
-function getSessionCookieOptions(expires: Date = new Date(0)) {
-  return {
-    expires,
-    httpOnly: true,
-    path: '/',
-    sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
-  }
-}
 
 function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
   const counts = new Map<number, number>()
@@ -54,65 +35,35 @@ function countBy<T>(rows: T[], getKey: (row: T) => number | null) {
   return counts
 }
 
-function cleanupExpiredSessions() {
-  const database = bootstrapDatabase()
+async function getOrganizerSessionRecord() {
+  const authSession = await auth.api.getSession({
+    headers: getRequest().headers,
+  })
 
-  database
-    .delete(organizerSessions)
-    .where(lt(organizerSessions.expiresAt, new Date().toISOString()))
-    .run()
-}
-
-function clearOrganizerSessionCookie() {
-  deleteCookie(SESSION_COOKIE_NAME, getSessionCookieOptions())
-}
-
-function getOrganizerSessionRecord() {
-  cleanupExpiredSessions()
-
-  const token = getCookie(SESSION_COOKIE_NAME)
-
-  if (!token) {
+  if (!authSession) {
     return null
   }
 
-  const database = bootstrapDatabase()
-  const session = database
-    .select({
-      expiresAt: organizerSessions.expiresAt,
-      organizerEmail: organizers.email,
-      organizerId: organizers.id,
-      organizerName: organizers.name,
-      token: organizerSessions.token,
-    })
-    .from(organizerSessions)
-    .innerJoin(organizers, eq(organizerSessions.organizerId, organizers.id))
-    .where(eq(organizerSessions.token, token))
+  const database = await bootstrapDatabase()
+  const organizer = database
+    .select()
+    .from(organizers)
+    .where(eq(organizers.userId, authSession.user.id))
     .get()
 
-  if (!session) {
-    clearOrganizerSessionCookie()
-    return null
-  }
-
-  if (new Date(session.expiresAt).getTime() <= Date.now()) {
-    database
-      .delete(organizerSessions)
-      .where(eq(organizerSessions.token, session.token))
-      .run()
-    clearOrganizerSessionCookie()
+  if (!organizer) {
     return null
   }
 
   return {
-    email: session.organizerEmail,
-    id: session.organizerId,
-    name: session.organizerName,
+    email: organizer.email,
+    id: organizer.id,
+    name: organizer.name,
   }
 }
 
-function requireOrganizerSession() {
-  const organizer = getOrganizerSessionRecord()
+async function requireOrganizerSession() {
+  const organizer = await getOrganizerSessionRecord()
 
   if (!organizer) {
     throw new Error('Organizer authentication required.')
@@ -121,11 +72,11 @@ function requireOrganizerSession() {
   return organizer
 }
 
-function resolveUniqueSlug(
+async function resolveUniqueSlug(
   requestedSlug: string,
   excludedCourseId?: number,
 ) {
-  const database = bootstrapDatabase()
+  const database = await bootstrapDatabase()
   const normalizedBaseSlug = requestedSlug.trim().toLowerCase()
   const matchingCourses = database
     .select({
@@ -162,69 +113,13 @@ function resolveUniqueSlug(
   return `${normalizedBaseSlug}-${suffix}`
 }
 
-export function getOrganizerSession() {
+export async function getOrganizerSession() {
   return getOrganizerSessionRecord()
 }
 
-export function loginOrganizer(input: OrganizerLoginInput) {
-  cleanupExpiredSessions()
-
-  const database = bootstrapDatabase()
-  const organizer = database
-    .select()
-    .from(organizers)
-    .where(eq(organizers.email, normalizeEmail(input.email)))
-    .get()
-
-  if (!organizer || !verifyPassword(input.password, organizer.passwordHash)) {
-    throw new Error('Invalid organizer email or password.')
-  }
-
-  const token = createSessionToken()
-  const expires = new Date(Date.now() + SESSION_DURATION_MS)
-
-  database
-    .insert(organizerSessions)
-    .values({
-      organizerId: organizer.id,
-      token,
-      expiresAt: expires.toISOString(),
-      createdAt: new Date().toISOString(),
-    })
-    .run()
-
-  setCookie(SESSION_COOKIE_NAME, token, getSessionCookieOptions(expires))
-
-  return {
-    organizer: {
-      email: organizer.email,
-      id: organizer.id,
-      name: organizer.name,
-    },
-  }
-}
-
-export function logoutOrganizer() {
-  const database = bootstrapDatabase()
-  const token = getCookie(SESSION_COOKIE_NAME)
-
-  if (token) {
-    database
-      .delete(organizerSessions)
-      .where(eq(organizerSessions.token, token))
-      .run()
-  }
-
-  clearOrganizerSessionCookie()
-
-  return {
-    ok: true,
-  }
-}
-
-export function getOrganizerDashboard() {
-  const organizer = requireOrganizerSession()
-  const database = bootstrapDatabase()
+export async function getOrganizerDashboard() {
+  const organizer = await requireOrganizerSession()
+  const database = await bootstrapDatabase()
   const organizerCourses = database
     .select()
     .from(courses)
@@ -312,10 +207,10 @@ export function getOrganizerDashboard() {
   }
 }
 
-export function createOrganizerCourse(input: OrganizerCourseInput) {
-  const organizer = requireOrganizerSession()
-  const database = bootstrapDatabase()
-  const slug = resolveUniqueSlug(input.slug)
+export async function createOrganizerCourse(input: OrganizerCourseInput) {
+  const organizer = await requireOrganizerSession()
+  const database = await bootstrapDatabase()
+  const slug = await resolveUniqueSlug(input.slug)
   const now = new Date().toISOString()
   const result = database
     .insert(courses)
@@ -354,9 +249,9 @@ export function createOrganizerCourse(input: OrganizerCourseInput) {
   }
 }
 
-export function getOrganizerCourseDetail(courseId: number) {
-  const organizer = requireOrganizerSession()
-  const database = bootstrapDatabase()
+export async function getOrganizerCourseDetail(courseId: number) {
+  const organizer = await requireOrganizerSession()
+  const database = await bootstrapDatabase()
   const course = database
     .select()
     .from(courses)
@@ -411,12 +306,12 @@ export function getOrganizerCourseDetail(courseId: number) {
   }
 }
 
-export function updateOrganizerCourse(
+export async function updateOrganizerCourse(
   courseId: number,
   input: OrganizerCourseInput,
 ) {
-  const organizer = requireOrganizerSession()
-  const database = bootstrapDatabase()
+  const organizer = await requireOrganizerSession()
+  const database = await bootstrapDatabase()
   const existingCourse = database
     .select({
       id: courses.id,
@@ -429,7 +324,7 @@ export function updateOrganizerCourse(
     throw new Error('Course not found.')
   }
 
-  const slug = resolveUniqueSlug(input.slug, courseId)
+  const slug = await resolveUniqueSlug(input.slug, courseId)
 
   database
     .update(courses)
@@ -468,7 +363,7 @@ export function updateOrganizerCourse(
 }
 
 export async function uploadCourseImage(formData: FormData) {
-  requireOrganizerSession()
+  await requireOrganizerSession()
 
   const file = formData.get('file')
 
