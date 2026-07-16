@@ -7,11 +7,11 @@ export const Route = createFileRoute('/api/auth/$')({
   server: {
     handlers: {
       GET: async ({ request }: { request: Request }) => {
-        bootstrapDatabase()
+        await bootstrapDatabase()
         return auth.handler(request)
       },
       POST: async ({ request }: { request: Request }) => {
-        bootstrapDatabase()
+        await bootstrapDatabase()
         return auth.handler(request)
       },
     },

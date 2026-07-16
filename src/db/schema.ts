@@ -90,27 +90,10 @@ export const organizers = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     email: text('email').notNull(),
     name: text('name').notNull(),
-    passwordHash: text('password_hash').notNull(),
     createdAt: text('created_at').notNull(),
   },
   (table) => ({
     emailIndex: uniqueIndex('organizers_email_idx').on(table.email),
-  }),
-)
-
-export const organizerSessions = sqliteTable(
-  'organizer_sessions',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    organizerId: integer('organizer_id')
-      .notNull()
-      .references(() => organizers.id, { onDelete: 'cascade' }),
-    token: text('token').notNull(),
-    expiresAt: text('expires_at').notNull(),
-    createdAt: text('created_at').notNull(),
-  },
-  (table) => ({
-    tokenIndex: uniqueIndex('organizer_sessions_token_idx').on(table.token),
   }),
 )
 
@@ -233,14 +216,6 @@ export const coursesRelations = relations(courses, ({ many, one }) => ({
 
 export const organizersRelations = relations(organizers, ({ many }) => ({
   courses: many(courses),
-  sessions: many(organizerSessions),
-}))
-
-export const organizerSessionsRelations = relations(organizerSessions, ({ one }) => ({
-  organizer: one(organizers, {
-    fields: [organizerSessions.organizerId],
-    references: [organizers.id],
-  }),
 }))
 
 export const modulesRelations = relations(modules, ({ one, many }) => ({

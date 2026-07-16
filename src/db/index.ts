@@ -22,20 +22,24 @@ sqlite.pragma('journal_mode = WAL')
 
 export const db = drizzle(sqlite, { schema })
 
-let isBootstrapped = false
+let bootstrapPromise: Promise<typeof db> | null = null
 
 export function bootstrapDatabase() {
-  if (isBootstrapped) {
-    return db
+  if (!bootstrapPromise) {
+    bootstrapPromise = (async () => {
+      migrate(db, {
+        migrationsFolder: resolve(process.cwd(), 'drizzle'),
+      })
+
+      await ensureSeedData(db)
+
+      return db
+    })().catch((error) => {
+      // Allow a retry on the next call instead of caching a rejected bootstrap.
+      bootstrapPromise = null
+      throw error
+    })
   }
 
-  migrate(db, {
-    migrationsFolder: resolve(process.cwd(), 'drizzle'),
-  })
-
-  isBootstrapped = true
-
-  void ensureSeedData(db).catch(console.error)
-
-  return db
+  return bootstrapPromise
 }

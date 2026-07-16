@@ -29,6 +29,13 @@
       "when": 1783001557560,
       "tag": "0003_puzzling_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784171512512,
+      "tag": "0003_closed_mandroid",
+      "breakpoints": true
     }
   ]
 }
