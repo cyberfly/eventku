@@ -540,6 +540,51 @@ textarea {
   justify-content: space-between;
 }
 
+.text-link {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.text-link:hover {
+  text-decoration: underline;
+}
+
+.attendee-table {
+  display: grid;
+  gap: 0;
+}
+
+.attendee-table-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.4fr) minmax(160px, 1fr) minmax(120px, 0.7fr) minmax(100px, 0.6fr);
+  gap: 16px;
+  align-items: center;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.attendee-table-head {
+  padding-top: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.attendee-table-row:first-child {
+  border-top: none;
+}
+
+.attendee-table-row div {
+  display: grid;
+  gap: 5px;
+}
+
+.attendee-table-row span {
+  color: var(--muted);
+}
+
 .detail-hero {
   border-top: 6px solid var(--course-accent);
 }
@@ -1012,6 +1057,7 @@ textarea {
 
   .shell-header,
   .support-row,
+  .attendee-table-row,
   .support-meta,
   .event-card-head,
   .lesson-list li,

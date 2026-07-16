@@ -39,6 +39,9 @@ function OrganizerDashboardPage() {
           <Link className="primary-link" to="/organizer/new">
             Create course
           </Link>
+          <Link className="ghost-link" to="/organizer/attendees">
+            View attendees
+          </Link>
           <button
             className="ghost-button"
             onClick={async () => {
@@ -114,6 +117,9 @@ function OrganizerDashboardPage() {
                       to="/organizer/courses/$courseId"
                     >
                       Manage
+                    </Link>
+                    <Link className="ghost-link" to="/organizer/attendees">
+                      Attendees
                     </Link>
                     {course.status === 'published' ? (
                       <Link

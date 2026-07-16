@@ -45,6 +45,14 @@ export const getOrganizerDashboardFn = createServerFn({ method: 'GET' }).handler
   },
 )
 
+export const getOrganizerAttendeesFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const { getOrganizerAttendees } = await import('@/server/organizer')
+
+    return getOrganizerAttendees()
+  },
+)
+
 export const createOrganizerCourseFn = createServerFn({ method: 'POST' })
   .inputValidator((input: z.infer<typeof organizerCourseInput>) =>
     organizerCourseInput.parse(input),
