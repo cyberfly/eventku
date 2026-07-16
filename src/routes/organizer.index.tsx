@@ -79,6 +79,7 @@ function OrganizerDashboardPage() {
                   <MediaPlaceholder
                     accent={course.accent}
                     eyebrow={course.category}
+                    imageUrl={course.featuredImage}
                     meta={course.status}
                     title={course.title}
                     variant="row"

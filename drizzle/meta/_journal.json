@@ -15,6 +15,20 @@
       "when": 1774876232263,
       "tag": "0001_lean_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1782979330841,
+      "tag": "0002_famous_yellowjacket",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1783001557560,
+      "tag": "0003_puzzling_toad",
+      "breakpoints": true
     }
   ]
 }

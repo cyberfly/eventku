@@ -74,3 +74,17 @@ export const updateOrganizerCourseFn = createServerFn({ method: 'POST' })
 
     return updateOrganizerCourse(data.courseId, data)
   })
+
+export const uploadCourseImageFn = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => {
+    if (!(input instanceof FormData)) {
+      throw new Error('Expected form data.')
+    }
+
+    return input
+  })
+  .handler(async ({ data }) => {
+    const { uploadCourseImage } = await import('@/server/organizer')
+
+    return uploadCourseImage(data)
+  })
