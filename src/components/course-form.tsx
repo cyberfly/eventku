@@ -663,9 +663,25 @@ export function CourseForm({
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
       {successMessage ? <p className="form-success">{successMessage}</p> : null}
 
-      <button className="primary-button" disabled={isSubmitting} type="submit">
-        {isSubmitting ? submittingLabel : submitLabel}
-      </button>
+      <div className="form-actions">
+        <button className="primary-button" disabled={isSubmitting} type="submit">
+          {isSubmitting ? submittingLabel : submitLabel}
+        </button>
+        <button
+          className="ghost-button"
+          disabled={isSubmitting}
+          onClick={() => {
+            setFormState(initialValues)
+            setHasCustomSlug(initialValues.slug.length > 0)
+            setFieldErrors({})
+            setHasAttemptedSubmit(false)
+            setImageUploadError(null)
+          }}
+          type="button"
+        >
+          Reset
+        </button>
+      </div>
     </form>
   )
 }
