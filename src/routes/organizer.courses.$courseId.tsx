@@ -10,6 +10,7 @@ import {
 
 import { CourseForm } from '@/components/course-form'
 import { MediaPlaceholder } from '@/components/media-placeholder'
+import { formatCurrency, formatEventDateTime } from '@/lib/format'
 import type { OrganizerCourseInput } from '@/lib/organizer'
 import {
   getOrganizerCourseDetailFn,
@@ -193,6 +194,16 @@ function OrganizerCourseDetailPage() {
                 <dd>{data.course.slug}</dd>
               </div>
             </dl>
+            <dl className="booking-facts">
+              <div>
+                <dt>Orders</dt>
+                <dd>{data.stats.orderCount}</dd>
+              </div>
+              <div>
+                <dt>Revenue</dt>
+                <dd>{formatCurrency(data.stats.totalRevenue)}</dd>
+              </div>
+            </dl>
           </section>
 
           <section className="panel">
@@ -241,6 +252,35 @@ function OrganizerCourseDetailPage() {
                     <div className="enrollment-progress">
                       <strong>{enrollment.progress}%</strong>
                       <span className="muted-copy">{enrollment.status}</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="panel">
+            <div className="section-intro">
+              <p className="eyebrow">Orders</p>
+              <h3>Purchases for this event</h3>
+            </div>
+            {data.orders.length === 0 ? (
+              <p className="muted-copy">No orders placed yet.</p>
+            ) : (
+              <div className="enrollment-list">
+                {data.orders.map((order) => (
+                  <article className="enrollment-row" key={order.id}>
+                    <div>
+                      <h4>{order.orderNumber}</h4>
+                      <p className="muted-copy">
+                        {order.buyerName} &bull; {order.buyerEmail}
+                      </p>
+                    </div>
+                    <div className="enrollment-progress">
+                      <strong>{formatCurrency(order.amount)}</strong>
+                      <span className="muted-copy">
+                        {order.status} &bull; {formatEventDateTime(order.createdAt)}
+                      </span>
                     </div>
                   </article>
                 ))}

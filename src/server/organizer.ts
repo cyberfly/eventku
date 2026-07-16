@@ -11,6 +11,7 @@ import {
   enrollments,
   lessons,
   modules,
+  orders,
   organizers,
   organizerSessions,
 } from '@/db/schema'
@@ -391,10 +392,20 @@ export function getOrganizerCourseDetail(courseId: number) {
       (left, right) =>
         new Date(right.enrolledAt).getTime() - new Date(left.enrolledAt).getTime(),
     )
+  const orderRows = database
+    .select()
+    .from(orders)
+    .where(eq(orders.courseId, course.id))
+    .all()
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime(),
+    )
 
   return {
     course,
     enrollments: enrollmentRows,
+    orders: orderRows,
     modules: moduleRows.map((module) => ({
       ...module,
       lessons: lessonRows
@@ -406,7 +417,9 @@ export function getOrganizerCourseDetail(courseId: number) {
       enrollmentCount: enrollmentRows.length,
       lessonCount: lessonRows.length,
       moduleCount: moduleRows.length,
+      orderCount: orderRows.length,
       seatsRemaining: Math.max(course.seatCap - enrollmentRows.length, 0),
+      totalRevenue: orderRows.reduce((sum, order) => sum + order.amount, 0),
     },
   }
 }

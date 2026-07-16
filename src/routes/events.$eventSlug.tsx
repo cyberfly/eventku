@@ -213,7 +213,7 @@ function EventDetailPage() {
                   })
 
                   setFormState(initialFormState)
-                  setSuccessMessage(`Order confirmed. Reference ${result.confirmationCode}.`)
+                  setSuccessMessage(`Order confirmed. Order number ${result.orderNumber}.`)
                   await router.invalidate()
                 } catch (error) {
                   setErrorMessage(

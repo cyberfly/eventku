@@ -96,12 +96,32 @@ export const enrollments = sqliteTable('enrollments', {
   courseId: integer('course_id')
     .notNull()
     .references(() => courses.id, { onDelete: 'cascade' }),
+  orderId: integer('order_id').references(() => orders.id, { onDelete: 'set null' }),
   learnerName: text('learner_name').notNull(),
   learnerEmail: text('learner_email').notNull(),
   status: text('status').notNull(),
   progress: integer('progress').notNull(),
   enrolledAt: text('enrolled_at').notNull(),
 })
+
+export const orders = sqliteTable(
+  'orders',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    orderNumber: text('order_number').notNull(),
+    courseId: integer('course_id')
+      .notNull()
+      .references(() => courses.id, { onDelete: 'cascade' }),
+    buyerName: text('buyer_name').notNull(),
+    buyerEmail: text('buyer_email').notNull(),
+    amount: integer('amount').notNull(),
+    status: text('status').notNull().default('confirmed'),
+    createdAt: text('created_at').notNull(),
+  },
+  (table) => ({
+    orderNumberIndex: uniqueIndex('orders_order_number_idx').on(table.orderNumber),
+  }),
+)
 
 export const tickets = sqliteTable(
   'tickets',
@@ -145,6 +165,7 @@ export const coursesRelations = relations(courses, ({ many, one }) => ({
   }),
   modules: many(modules),
   enrollments: many(enrollments),
+  orders: many(orders),
   tickets: many(tickets),
 }))
 
@@ -180,6 +201,18 @@ export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
     fields: [enrollments.courseId],
     references: [courses.id],
   }),
+  order: one(orders, {
+    fields: [enrollments.orderId],
+    references: [orders.id],
+  }),
+}))
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  course: one(courses, {
+    fields: [orders.courseId],
+    references: [courses.id],
+  }),
+  enrollments: many(enrollments),
 }))
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
