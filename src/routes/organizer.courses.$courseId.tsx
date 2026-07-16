@@ -228,11 +228,18 @@ function OrganizerCourseDetailPage() {
               <p className="eyebrow">Enrollments</p>
               <h3>Recent learners</h3>
             </div>
+            <Link
+              className="ghost-link"
+              params={{ courseId: String(data.course.id) }}
+              to="/organizer/courses/$courseId/attendees"
+            >
+              Manage attendees
+            </Link>
             {data.enrollments.length === 0 ? (
               <p className="muted-copy">No learners enrolled yet.</p>
             ) : (
               <div className="enrollment-list">
-                {data.enrollments.map((enrollment) => (
+                {data.enrollments.slice(0, 5).map((enrollment) => (
                   <article className="enrollment-row" key={enrollment.id}>
                     <div>
                       <h4>{enrollment.learnerName}</h4>

@@ -115,6 +115,13 @@ function OrganizerDashboardPage() {
                     >
                       Manage
                     </Link>
+                    <Link
+                      className="ghost-link"
+                      params={{ courseId: String(course.id) }}
+                      to="/organizer/courses/$courseId/attendees"
+                    >
+                      Attendees
+                    </Link>
                     {course.status === 'published' ? (
                       <Link
                         className="ghost-link"

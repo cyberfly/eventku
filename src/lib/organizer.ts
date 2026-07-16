@@ -31,6 +31,28 @@ export const organizerLoginInput = z.object({
   password: z.string().min(8).max(128),
 })
 
+export const attendeeStatusOptions = [
+  'Confirmed',
+  'Attended',
+  'Cancelled',
+] as const
+
+export type AttendeeStatus = (typeof attendeeStatusOptions)[number]
+
+export const updateAttendeeStatusInput = z.object({
+  courseId: z.number().int().positive(),
+  enrollmentId: z.number().int().positive(),
+  status: z.enum(attendeeStatusOptions),
+})
+
+export const removeAttendeeInput = z.object({
+  courseId: z.number().int().positive(),
+  enrollmentId: z.number().int().positive(),
+})
+
+export type UpdateAttendeeStatusInput = z.infer<typeof updateAttendeeStatusInput>
+export type RemoveAttendeeInput = z.infer<typeof removeAttendeeInput>
+
 export const organizerCourseInput = z
   .object({
     title: z
