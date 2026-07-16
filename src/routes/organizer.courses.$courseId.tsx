@@ -110,6 +110,9 @@ function OrganizerCourseDetailPage() {
             <Link className="ghost-link" to="/organizer">
               Back to dashboard
             </Link>
+            <Link className="ghost-link" to="/organizer/attendees">
+              View attendees
+            </Link>
             {data.course.status === 'published' ? (
               <Link
                 className="ghost-link"

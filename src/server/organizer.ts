@@ -312,6 +312,84 @@ export function getOrganizerDashboard() {
   }
 }
 
+export function getOrganizerAttendees() {
+  const organizer = requireOrganizerSession()
+  const database = bootstrapDatabase()
+  const organizerCourses = database
+    .select({
+      accent: courses.accent,
+      id: courses.id,
+      seatCap: courses.seatCap,
+      slug: courses.slug,
+      status: courses.status,
+      title: courses.title,
+    })
+    .from(courses)
+    .where(eq(courses.organizerId, organizer.id))
+    .all()
+    .sort((left, right) => left.title.localeCompare(right.title))
+
+  const courseById = new Map(organizerCourses.map((course) => [course.id, course]))
+  const courseIds = organizerCourses.map((course) => course.id)
+  const attendeeRows =
+    courseIds.length > 0
+      ? database
+          .select()
+          .from(enrollments)
+          .where(inArray(enrollments.courseId, courseIds))
+          .all()
+          .sort(
+            (left, right) =>
+              new Date(right.enrolledAt).getTime() -
+              new Date(left.enrolledAt).getTime(),
+          )
+      : []
+  const attendeeCountByCourse = countBy(attendeeRows, (row) => row.courseId)
+
+  return {
+    attendees: attendeeRows.map((attendee) => ({
+      ...attendee,
+      course: courseById.get(attendee.courseId) ?? null,
+    })),
+    courses: organizerCourses.map((course) => {
+      const attendeeCount = attendeeCountByCourse.get(course.id) ?? 0
+
+      return {
+        ...course,
+        attendeeCount,
+        seatsRemaining: Math.max(course.seatCap - attendeeCount, 0),
+      }
+    }),
+    metrics: [
+      {
+        label: 'Attendees',
+        value: String(attendeeRows.length),
+      },
+      {
+        label: 'Active',
+        value: String(
+          attendeeRows.filter((attendee) =>
+            ['Active', 'Confirmed'].includes(attendee.status),
+          ).length,
+        ),
+      },
+      {
+        label: 'Completed',
+        value: String(
+          attendeeRows.filter((attendee) => attendee.status === 'Completed').length,
+        ),
+      },
+      {
+        label: 'At risk',
+        value: String(
+          attendeeRows.filter((attendee) => attendee.status === 'At Risk').length,
+        ),
+      },
+    ],
+    organizer,
+  }
+}
+
 export function createOrganizerCourse(input: OrganizerCourseInput) {
   const organizer = requireOrganizerSession()
   const database = bootstrapDatabase()
