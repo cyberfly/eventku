@@ -664,6 +664,126 @@ textarea {
   display: block;
 }
 
+.section-intro-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.section-intro-row .section-intro {
+  margin-bottom: 0;
+}
+
+.attendee-filter-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.attendee-search,
+.attendee-status-select {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 12px 18px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+  font: inherit;
+}
+
+.attendee-search {
+  flex: 1;
+  min-width: 220px;
+}
+
+.attendee-empty {
+  padding: 20px 0;
+}
+
+.attendee-list {
+  display: grid;
+  gap: 0;
+}
+
+.attendee-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+
+.attendee-row:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.attendee-avatar {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--attendee-accent) 72%, white), color-mix(in srgb, var(--attendee-accent) 38%, #1f2520));
+  color: white;
+  font-weight: 700;
+}
+
+.attendee-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.attendee-info h4 {
+  margin: 0;
+}
+
+.attendee-progress-col {
+  display: grid;
+  gap: 6px;
+  width: 120px;
+  text-align: right;
+}
+
+.attendee-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(31, 37, 32, 0.1);
+  overflow: hidden;
+}
+
+.attendee-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.attendee-meta {
+  display: grid;
+  gap: 6px;
+  justify-items: end;
+  text-align: right;
+}
+
+.attendee-status.status-active {
+  background: color-mix(in srgb, var(--green) 18%, transparent);
+  color: var(--green);
+}
+
+.attendee-status.status-at-risk {
+  background: color-mix(in srgb, var(--orange) 18%, transparent);
+  color: var(--orange);
+}
+
+.attendee-status.status-completed {
+  background: rgba(31, 37, 32, 0.12);
+  color: var(--ink);
+}
+
 .support-layout {
   grid-template-columns: 380px 1fr;
 }
@@ -1016,10 +1136,22 @@ textarea {
   .event-card-head,
   .lesson-list li,
   .enrollment-row,
+  .attendee-row,
   .booking-price-row {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: start;
+  }
+
+  .attendee-progress-col {
+    width: 100%;
+    text-align: left;
+  }
+
+  .attendee-meta {
+    width: 100%;
+    text-align: left;
+    justify-items: start;
   }
 
   .organizer-course-side {
