@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { bootstrapDatabase } from '@/db'
-import { courses, enrollments, lessons, modules } from '@/db/schema'
+import { courses, enrollments, lessons, modules, orders } from '@/db/schema'
 
 type CourseRow = typeof courses.$inferSelect
 type EnrollmentRow = typeof enrollments.$inferSelect
@@ -286,19 +286,44 @@ export function purchaseEventAccess(input: PurchaseEventInput) {
     throw new Error('This attendee already has a confirmed registration.')
   }
 
-  const result = database
-    .insert(enrollments)
-    .values({
-      courseId: course.id,
-      learnerName: input.attendeeName.trim(),
-      learnerEmail: normalizedEmail,
-      status: 'Confirmed',
-      progress: 0,
-      enrolledAt: new Date().toISOString(),
-    })
-    .run()
+  const attendeeName = input.attendeeName.trim()
+  const now = new Date().toISOString()
+
+  const orderNumber = database.transaction((tx) => {
+    const orderInsert = tx
+      .insert(orders)
+      .values({
+        courseId: course.id,
+        buyerName: attendeeName,
+        buyerEmail: normalizedEmail,
+        amount: course.price,
+        status: 'confirmed',
+        orderNumber: '',
+        createdAt: now,
+      })
+      .run()
+
+    const orderId = Number(orderInsert.lastInsertRowid)
+    const generatedOrderNumber = `ORD-${course.id}-${String(orderId).padStart(4, '0')}`
+
+    tx.update(orders).set({ orderNumber: generatedOrderNumber }).where(eq(orders.id, orderId)).run()
+
+    tx.insert(enrollments)
+      .values({
+        courseId: course.id,
+        orderId,
+        learnerName: attendeeName,
+        learnerEmail: normalizedEmail,
+        status: 'Confirmed',
+        progress: 0,
+        enrolledAt: now,
+      })
+      .run()
+
+    return generatedOrderNumber
+  })
 
   return {
-    confirmationCode: `NS-${course.id}-${String(Number(result.lastInsertRowid)).padStart(4, '0')}`,
+    orderNumber,
   }
 }
