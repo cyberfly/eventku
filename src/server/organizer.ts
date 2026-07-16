@@ -1,3 +1,7 @@
+import { randomUUID } from 'node:crypto'
+import { mkdir, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+
 import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server'
 
@@ -14,6 +18,14 @@ import type { OrganizerCourseInput, OrganizerLoginInput } from '@/lib/organizer'
 import { createSessionToken, normalizeEmail, verifyPassword } from '@/lib/organizer-auth'
 
 const SESSION_COOKIE_NAME = 'organizer_session'
+const COURSE_IMAGE_DIR = resolve(process.cwd(), 'public/uploads/courses')
+const COURSE_IMAGE_EXTENSION_BY_TYPE: Record<string, string> = {
+  'image/gif': 'gif',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
+const MAX_COURSE_IMAGE_BYTES = 5 * 1024 * 1024
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7
 
 function getSessionCookieOptions(expires: Date = new Date(0)) {
@@ -320,6 +332,18 @@ export function createOrganizerCourse(input: OrganizerCourseInput) {
       completionRate: input.completionRate,
       instructorName: input.instructorName.trim(),
       accent: input.accent,
+      price: input.price,
+      format: input.format,
+      venue: input.venue.trim(),
+      city: input.city.trim(),
+      audience: input.audience.trim(),
+      heroNote: input.heroNote.trim(),
+      hostBio: input.hostBio.trim(),
+      startAt: new Date(input.startAt).toISOString(),
+      endAt: new Date(input.endAt).toISOString(),
+      highlights: JSON.stringify(input.highlights.map((item) => item.trim())),
+      takeaways: JSON.stringify(input.takeaways.map((item) => item.trim())),
+      featuredImage: input.featuredImage,
       createdAt: now,
     })
     .run()
@@ -472,6 +496,18 @@ export function updateOrganizerCourse(
       completionRate: input.completionRate,
       instructorName: input.instructorName.trim(),
       accent: input.accent,
+      price: input.price,
+      format: input.format,
+      venue: input.venue.trim(),
+      city: input.city.trim(),
+      audience: input.audience.trim(),
+      heroNote: input.heroNote.trim(),
+      hostBio: input.hostBio.trim(),
+      startAt: new Date(input.startAt).toISOString(),
+      endAt: new Date(input.endAt).toISOString(),
+      highlights: JSON.stringify(input.highlights.map((item) => item.trim())),
+      takeaways: JSON.stringify(input.takeaways.map((item) => item.trim())),
+      featuredImage: input.featuredImage,
     })
     .where(eq(courses.id, courseId))
     .run()
@@ -479,5 +515,36 @@ export function updateOrganizerCourse(
   return {
     courseId,
     slug,
+  }
+}
+
+export async function uploadCourseImage(formData: FormData) {
+  requireOrganizerSession()
+
+  const file = formData.get('file')
+
+  if (!(file instanceof File)) {
+    throw new Error('No image file was provided.')
+  }
+
+  const extension = COURSE_IMAGE_EXTENSION_BY_TYPE[file.type]
+
+  if (!extension) {
+    throw new Error('Upload a JPEG, PNG, WebP, or GIF image.')
+  }
+
+  if (file.size > MAX_COURSE_IMAGE_BYTES) {
+    throw new Error('Image must be 5MB or smaller.')
+  }
+
+  await mkdir(COURSE_IMAGE_DIR, { recursive: true })
+
+  const filename = `${randomUUID()}.${extension}`
+  const buffer = Buffer.from(await file.arrayBuffer())
+
+  await writeFile(resolve(COURSE_IMAGE_DIR, filename), buffer)
+
+  return {
+    url: `/uploads/courses/${filename}`,
   }
 }
