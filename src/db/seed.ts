@@ -154,6 +154,20 @@ const enrollmentSeed = [
   { id: 9, courseId: 3, learnerName: 'Grace Tan', learnerEmail: 'grace@example.com', status: 'Completed', progress: 100, enrolledAt: '2026-03-01T16:20:00.000Z' },
 ]
 
+const coursePriceById = new Map(courseSeed.map((course) => [course.id, course.price]))
+
+const orderSeed = enrollmentSeed.map((enrollment, index) => ({
+  id: enrollment.id,
+  orderNumber: `EK-2026-${String(index + 1).padStart(5, '0')}`,
+  courseId: enrollment.courseId,
+  enrollmentId: enrollment.id,
+  attendeeName: enrollment.learnerName,
+  attendeeEmail: enrollment.learnerEmail,
+  amountPaid: coursePriceById.get(enrollment.courseId) ?? 0,
+  status: 'confirmed',
+  createdAt: enrollment.enrolledAt,
+}))
+
 const ticketSeed = [
   {
     id: 1,
@@ -300,6 +314,7 @@ export function ensureSeedData(
       tx.insert(schema.modules).values(moduleSeed).run()
       tx.insert(schema.lessons).values(lessonSeed).run()
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
+      tx.insert(schema.orders).values(orderSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
       ensureDefaultOrganizer(tx)
