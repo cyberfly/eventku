@@ -1,7 +1,7 @@
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { eq, isNull } from 'drizzle-orm'
 
-import { hashPassword, normalizeEmail } from '@/lib/organizer-auth'
+import { normalizeEmail } from '@/lib/organizer-auth'
 import * as schema from './schema'
 
 const courseSeed = [
@@ -236,11 +236,38 @@ function getDefaultOrganizerSeed() {
   }
 }
 
-function ensureDefaultOrganizer(
+async function ensureAuthUser(
+  db: BetterSQLite3Database<typeof schema>,
+  email: string,
+  name: string,
+  password: string,
+) {
+  const existing = db
+    .select()
+    .from(schema.authUser)
+    .where(eq(schema.authUser.email, email))
+    .get()
+
+  if (existing) {
+    return existing.id
+  }
+
+  // Use better-auth to create the user so the password is hashed correctly
+  const { auth } = await import('@/lib/auth')
+  const response = await auth.api.signUpEmail({
+    body: { email, name, password },
+  })
+
+  return response.user.id
+}
+
+async function ensureDefaultOrganizer(
   db: BetterSQLite3Database<typeof schema>,
 ) {
   const defaults = getDefaultOrganizerSeed()
-  const passwordHash = hashPassword(defaults.password)
+
+  await ensureAuthUser(db, defaults.email, defaults.name, defaults.password)
+
   const exactOrganizer = db
     .select()
     .from(schema.organizers)
@@ -262,19 +289,17 @@ function ensureDefaultOrganizer(
           .values({
             email: defaults.email,
             name: defaults.name,
-            passwordHash,
             createdAt: new Date().toISOString(),
           })
           .run().lastInsertRowid,
       )
 
-  if (existingOrganizer) {
+  if (existingOrganizer && (existingOrganizer.email !== defaults.email || existingOrganizer.name !== defaults.name)) {
     db
       .update(schema.organizers)
       .set({
         email: defaults.email,
         name: defaults.name,
-        passwordHash,
       })
       .where(eq(schema.organizers.id, organizerId))
       .run()
@@ -282,14 +307,12 @@ function ensureDefaultOrganizer(
 
   db
     .update(schema.courses)
-    .set({
-      organizerId,
-    })
+    .set({ organizerId })
     .where(isNull(schema.courses.organizerId))
     .run()
 }
 
-export function ensureSeedData(
+export async function ensureSeedData(
   db: BetterSQLite3Database<typeof schema>,
 ) {
   const existingCourses = db.select().from(schema.courses).limit(1).all()
@@ -302,10 +325,8 @@ export function ensureSeedData(
       tx.insert(schema.enrollments).values(enrollmentSeed).run()
       tx.insert(schema.tickets).values(ticketSeed).run()
       tx.insert(schema.ticketMessages).values(ticketMessageSeed).run()
-      ensureDefaultOrganizer(tx)
     })
-    return
   }
 
-  ensureDefaultOrganizer(db)
+  await ensureDefaultOrganizer(db)
 }

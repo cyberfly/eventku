@@ -29,6 +29,20 @@
       "when": 1783001557560,
       "tag": "0003_puzzling_toad",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784175104936,
+      "tag": "0004_woozy_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784175166521,
+      "tag": "0005_parallel_sentinel",
+      "breakpoints": true
     }
   ]
 }

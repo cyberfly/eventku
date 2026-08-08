@@ -1,5 +1,88 @@
-import { relations } from 'drizzle-orm'
-import { integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+import { relations, sql } from 'drizzle-orm'
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
+
+// better-auth tables
+export const authUser = sqliteTable('auth_user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false).notNull(),
+  image: text('image'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+    .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+    .$onUpdate(() => new Date())
+    .notNull(),
+})
+
+export const authSession = sqliteTable(
+  'auth_session',
+  {
+    id: text('id').primaryKey(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    token: text('token').notNull().unique(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+  },
+  (table) => [index('auth_session_userId_idx').on(table.userId)],
+)
+
+export const authAccount = sqliteTable(
+  'auth_account',
+  {
+    id: text('id').primaryKey(),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+    refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index('auth_account_userId_idx').on(table.userId)],
+)
+
+export const authVerification = sqliteTable(
+  'auth_verification',
+  {
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+      .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index('auth_verification_identifier_idx').on(table.identifier)],
+)
 
 export const organizers = sqliteTable(
   'organizers',
@@ -7,27 +90,10 @@ export const organizers = sqliteTable(
     id: integer('id').primaryKey({ autoIncrement: true }),
     email: text('email').notNull(),
     name: text('name').notNull(),
-    passwordHash: text('password_hash').notNull(),
     createdAt: text('created_at').notNull(),
   },
   (table) => ({
     emailIndex: uniqueIndex('organizers_email_idx').on(table.email),
-  }),
-)
-
-export const organizerSessions = sqliteTable(
-  'organizer_sessions',
-  {
-    id: integer('id').primaryKey({ autoIncrement: true }),
-    organizerId: integer('organizer_id')
-      .notNull()
-      .references(() => organizers.id, { onDelete: 'cascade' }),
-    token: text('token').notNull(),
-    expiresAt: text('expires_at').notNull(),
-    createdAt: text('created_at').notNull(),
-  },
-  (table) => ({
-    tokenIndex: uniqueIndex('organizer_sessions_token_idx').on(table.token),
   }),
 )
 
@@ -150,14 +216,6 @@ export const coursesRelations = relations(courses, ({ many, one }) => ({
 
 export const organizersRelations = relations(organizers, ({ many }) => ({
   courses: many(courses),
-  sessions: many(organizerSessions),
-}))
-
-export const organizerSessionsRelations = relations(organizerSessions, ({ one }) => ({
-  organizer: one(organizers, {
-    fields: [organizerSessions.organizerId],
-    references: [organizers.id],
-  }),
 }))
 
 export const modulesRelations = relations(modules, ({ one, many }) => ({
